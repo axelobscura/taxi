@@ -172,6 +172,34 @@ origen. Si no hay ninguno, la app muestra el error en pantalla.
 > El arreglo `DRIVERS` fijo ya no existe: los conductores del panel son los
 > que aparecen en la reserva.
 
+## Despliegue en Vercel
+
+El build funciona, pero **los datos no sobreviven**. Vercel monta el proyecto en
+solo lectura y el único directorio escribible es `/tmp`, así que ahí va el
+archivo SQLite (`src/lib/db/index.ts` lo detecta con la variable `VERCEL`).
+
+Ese `/tmp` es **por instancia y se borra en cada arranque en frío**. En la
+práctica:
+
+- Cada despliegue y cada arranque en frío deja la base vacía.
+- Dos instancias concurrentes tienen bases distintas: alguien que se registra en
+  una no puede entrar por la otra.
+- Las sesiones de `src/lib/auth.ts` viven en la base, así que la sesión se cae
+  sin aviso.
+
+Sirve para enseñar el prototipo, no para uso real. La salida es la migración de
+la sección siguiente.
+
+Dos detalles que hacen falta para que el despliegue funcione:
+
+- La conexión es **perezosa**: `next build` evalúa cada módulo de ruta para leer
+  su configuración, y conectarse al importar hacía que el build dependiera de un
+  disco escribible.
+- `schema.sql` se lee en tiempo de ejecución con una ruta armada desde
+  `process.cwd()`, que el trazador de archivos no puede seguir. Va declarado en
+  `outputFileTracingIncludes` dentro de `next.config.ts`; si no, el bundle sale
+  sin el archivo y toda consulta truena.
+
 ## Migrar a Postgres remoto
 
 Pediste una base **SQL remota** y esto corre en SQLite local. El SQL se
