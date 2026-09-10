@@ -1,4 +1,5 @@
 import Link from "next/link";
+import HeaderNav from "./HeaderNav";
 import MenuOverlay from "./MenuOverlay";
 
 /**
@@ -45,8 +46,11 @@ export default function SiteHeader({ floating = false }: { floating?: boolean })
           </div>
         </Link>
 
-        <div className="relative flex flex-1 items-center justify-end bg-rosa px-5">
-          <MenuOverlay />
+        <div className="relative flex flex-1 items-stretch justify-end bg-rosa">
+          <HeaderNav />
+          <div className="flex items-center px-5 md:hidden">
+            <MenuOverlay />
+          </div>
         </div>
       </div>
     </header>
