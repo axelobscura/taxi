@@ -1,0 +1,253 @@
+@import "tailwindcss";
+
+@theme {
+  /* Core surfaces — deep CDMX night */
+  --color-ink: #0b0b0f;
+  --color-ink-soft: #14141b;
+  --color-ink-raised: #1c1c26;
+  --color-ink-line: #2a2a38;
+
+  /* CDMX taxi pink — the city's signature */
+  --color-rosa: #ff2d78;
+  --color-rosa-bright: #ff5c9a;
+  --color-rosa-deep: #c3005a;
+
+  /* Supporting accents */
+  --color-gold: #ffc857;
+  --color-jade: #2ee6a8;
+  --color-violet: #8b5cf6;
+
+  /* Text */
+  --color-cream: #f6f4f2;
+  --color-muted: #9a97a8;
+
+  --font-display: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+
+  /* Taxiar uses hard 90-degree corners throughout — no rounding. */
+  --radius-4xl: 0px;
+  --radius-5xl: 0px;
+
+  --animate-pulse-ring: pulse-ring 2.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-shimmer: shimmer 2.5s linear infinite;
+  --animate-drive: drive 8s ease-in-out infinite;
+  --animate-rise: rise 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(0.7); opacity: 0.8; }
+  70% { transform: scale(2.2); opacity: 0; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes drive {
+  0%, 100% { offset-distance: 0%; }
+  50% { offset-distance: 100%; }
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@layer base {
+  html {
+    font-family: var(--font-sans);
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    background: var(--color-ink);
+    color: var(--color-cream);
+    overscroll-behavior-y: none;
+  }
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+  }
+  ::selection {
+    background: var(--color-rosa);
+    color: white;
+  }
+}
+
+@layer utilities {
+  /* Angled parallelogram, the template's signature shape. */
+  .skewed {
+    transform: skewX(-12deg);
+  }
+  .skewed > * {
+    transform: skewX(12deg);
+  }
+  /* Full-width angled button: the slanted edges are cut with clip-path so the
+     element keeps its full width instead of overhanging the gutter. */
+  .skewed-btn {
+    clip-path: polygon(14px 0, 100% 0, calc(100% - 14px) 100%, 0 100%);
+  }
+
+  /* Corner cut on cards and buttons, echoing the angled nav bar. */
+  .cut-tr {
+    clip-path: polygon(0 0, calc(100% - 26px) 0, 100% 26px, 100% 100%, 0 100%);
+  }
+  .cut-bl {
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 18px 100%, 0 calc(100% - 18px));
+  }
+
+  /* The double-dash + uppercase label that sits above every heading. */
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-rosa);
+  }
+  .eyebrow::before {
+    content: "";
+    width: 34px;
+    height: 0;
+    border-top: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    height: 6px;
+    flex: none;
+  }
+
+  /* Frosted card surface used across the booking sheet */
+  .glass {
+    background: color-mix(in oklab, var(--color-ink-soft) 78%, transparent);
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    border: 1px solid color-mix(in oklab, var(--color-cream) 8%, transparent);
+  }
+
+  .glow-rosa {
+    box-shadow:
+      0 0 0 1px color-mix(in oklab, var(--color-rosa) 40%, transparent),
+      0 12px 40px -8px color-mix(in oklab, var(--color-rosa) 55%, transparent);
+  }
+
+  /* Animated gradient text for the hero numerals */
+  .text-gradient {
+    background: linear-gradient(
+      100deg,
+      var(--color-rosa-bright),
+      var(--color-gold),
+      var(--color-rosa-bright)
+    );
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: var(--animate-shimmer);
+  }
+
+  .grain::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ---- Leaflet ---------------------------------------------------------- */
+
+.leaflet-container {
+  background: var(--color-ink);
+  font-family: var(--font-sans);
+  outline: none;
+}
+
+/* Esri's dark canvas is mid-grey; pull it down to the app's near-black and
+   cool it slightly so the pink route and jade dot stay the brightest things
+   on screen. Applied to tiles only, so markers keep their true colours. */
+.leaflet-tile-pane {
+  filter: brightness(0.5) saturate(0.75) contrast(1.15) hue-rotate(-8deg);
+}
+
+/* Attribution is required by OSM/CARTO terms — keep it, restyle it. */
+.leaflet-control-attribution {
+  background: color-mix(in oklab, var(--color-ink) 82%, transparent) !important;
+  color: var(--color-muted) !important;
+  font-size: 9px !important;
+  padding: 2px 6px !important;
+}
+.leaflet-control-attribution a {
+  color: var(--color-muted) !important;
+}
+
+/* Origin: pulsing jade dot */
+.map-dot {
+  display: block;
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  background: var(--color-jade);
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--color-jade) 28%, transparent);
+  position: relative;
+}
+.map-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  border: 2px solid var(--color-jade);
+  animation: pulse-ring 2.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Destination: angled pink pin, matching the template's shape language */
+.map-pin {
+  display: block;
+  width: 22px;
+  height: 30px;
+  background: var(--color-rosa);
+  clip-path: polygon(50% 100%, 0 45%, 0 0, 100% 0, 100% 45%);
+  box-shadow: 0 6px 18px -4px color-mix(in oklab, var(--color-rosa) 70%, transparent);
+  position: relative;
+}
+.map-pin::after {
+  content: "";
+  position: absolute;
+  top: 7px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  background: var(--color-ink);
+}
+
+/* The car travelling the route */
+.map-car {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  background: var(--color-gold);
+  box-shadow: 0 0 0 5px color-mix(in oklab, var(--color-gold) 25%, transparent);
+}
