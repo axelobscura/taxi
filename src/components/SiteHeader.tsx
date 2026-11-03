@@ -16,7 +16,7 @@ export default function SiteHeader({ floating = false }: { floating?: boolean })
           : "relative border-b border-snow/10 bg-coal"
       }
     >
-      <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-6 px-5 py-4">
+      <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-6 px-1 py-4">
         <Logo />
         <HeaderNav />
         <div className="lg:hidden">

@@ -25,7 +25,7 @@ export default function PageShell({
       <SiteHeader />
 
       <section className="hero-lines relative overflow-hidden bg-coal px-5 py-14 sm:py-20">
-        <div className="relative mx-auto w-full max-w-4xl">
+        <div className="relative mx-auto w-full max-w-6xl">
           {crumbs && <Breadcrumbs crumbs={crumbs} />}
           <p className="eyebrow mb-3">{eyebrow}</p>
           <h1 className="font-display text-4xl font-black uppercase leading-[0.95] text-snow sm:text-5xl">
@@ -43,7 +43,7 @@ export default function PageShell({
       <div aria-hidden className="h-1.5 bg-taxi" />
 
       <main className="theme-light flex-1 px-5 py-14">
-        <div className="mx-auto w-full max-w-4xl">{children}</div>
+        <div className="mx-auto w-full max-w-6xl">{children}</div>
       </main>
 
       <SiteFooter />

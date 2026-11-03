@@ -63,15 +63,9 @@ export default function Home() {
       <div className="relative">
         <SiteHeader floating />
 
-        {/* Hero: phone number up front, taxi parked over the yellow band. */}
+        {/* Hero: taxi parked over the yellow band. */}
         <section className="hero-lines bg-coal px-5 pt-28 text-center sm:pt-36">
           <p className="eyebrow justify-center">Pide tu taxi ahora</p>
-          <a
-            href={`tel:${SITE.phone}`}
-            className="mt-3 inline-block font-display text-4xl font-black tracking-tight text-snow transition hover:text-taxi sm:text-7xl"
-          >
-            {SITE.phoneDisplay}
-          </a>
           <p className="mt-3 text-[11px] font-bold uppercase tracking-[0.3em] text-snow/60">
             taxi.org.mx · 24/7 en toda la CDMX
           </p>
