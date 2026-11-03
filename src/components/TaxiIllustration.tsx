@@ -30,7 +30,7 @@ export default function TaxiIllustration({ className = "" }: { className?: strin
       viewBox="0 0 680 260"
       className={className}
       role="img"
-      aria-label="Taxi amarillo de TAXI_MEX"
+      aria-label="Taxi amarillo de TAXI-MEX"
     >
       <defs>
         <linearGradient id="body" x1="0" y1="0" x2="0" y2="1">

@@ -8,7 +8,7 @@ import { pageMetadata } from "@/lib/site";
 export const metadata: Metadata = pageMetadata(
   "/taxi",
   "Taxi en México: ciudades y zonas con servicio",
-  "Consulta dónde opera TAXI_MEX: taxis seguros con tarifa cerrada en la Ciudad de México, el aeropuerto AICM y las centrales de autobuses.",
+  "Consulta dónde opera TAXI-MEX: taxis seguros con tarifa cerrada en la Ciudad de México, el aeropuerto AICM y las centrales de autobuses.",
 );
 
 const CRUMBS = [

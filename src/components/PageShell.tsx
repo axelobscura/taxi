@@ -113,7 +113,7 @@ export function SiteFooter() {
       </div>
 
       <div className="mx-auto mt-10 w-full max-w-6xl border-t border-ink-line pt-5 text-[11px] text-muted">
-        © {new Date().getFullYear()} TAXI_MEX CDMX · Conductores verificados con la
+        © {new Date().getFullYear()} TAXI-MEX CDMX · Conductores verificados con la
         SEMOVI
       </div>
     </footer>

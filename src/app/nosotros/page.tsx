@@ -43,7 +43,7 @@ export default function NosotrosPage() {
     <PageShell
       eyebrow="Sobre nosotros"
       title={<>Movemos a la<br />Ciudad de México</>}
-      lead="TAXI_MEX nació para que pedir un taxi en la CDMX sea simple, seguro y con un precio que se sepa de antemano."
+      lead="TAXI-MEX nació para que pedir un taxi en la CDMX sea simple, seguro y con un precio que se sepa de antemano."
     >
       <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {STATS.map((s) => (

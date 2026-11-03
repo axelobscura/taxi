@@ -2,6 +2,7 @@ import Link from "next/link";
 import RideBooker from "./RideBooker";
 import SiteHeader from "@/components/SiteHeader";
 import TaxiIllustration from "@/components/TaxiIllustration";
+import CarIcon from "@/components/CarIcon";
 import { SiteFooter } from "@/components/PageShell";
 import { JsonLd, taxiServiceJsonLd } from "@/components/Landing";
 import { CITIES } from "@/lib/cities";
@@ -15,7 +16,7 @@ export const metadata = {
     SITE.description,
   ),
   // Keep the full brand title on the home page instead of the template.
-  title: { absolute: "Taxi en CDMX las 24 horas · Pide en línea | TAXI_MEX" },
+  title: { absolute: "Taxi en CDMX las 24 horas · Pide en línea | TAXI-MEX" },
 };
 
 const FEATURES = [
@@ -152,11 +153,7 @@ function Tariffs() {
               className="card-shadow flex flex-col items-center rounded-lg bg-ink px-6 pb-7 pt-8 text-center"
             >
               <span className="grid size-16 place-items-center rounded-full bg-taxi">
-                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" aria-hidden>
-                  <path d="M4 15h16v-4l-2.6-4.1a2 2 0 0 0-1.7-.9H8.3a2 2 0 0 0-1.7.9L4 11Z" fill="#111" />
-                  <circle cx="7.8" cy="16.6" r="1.9" fill="#111" />
-                  <circle cx="16.2" cy="16.6" r="1.9" fill="#111" />
-                </svg>
+                <CarIcon size={34} />
               </span>
               <h3 className="mt-5 font-display text-lg font-black uppercase">
                 Taxi {t.name}
@@ -202,7 +199,7 @@ function Features() {
             por la ciudad
           </h2>
           <p className="mt-5 max-w-md text-sm leading-relaxed text-muted">
-            TAXI_MEX nació para que pedir un taxi en la CDMX sea simple, seguro
+            TAXI-MEX nació para que pedir un taxi en la CDMX sea simple, seguro
             y con un precio que se sepa de antemano.
           </p>
           <dl className="mt-8 flex gap-10">

@@ -1,6 +1,6 @@
 /** Brand and contact details shared by metadata, structured data and pages. */
 export const SITE = {
-  name: "TAXI_MEX",
+  name: "TAXI-MEX",
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://taxi.org.mx",
   description:
     "Pide un taxi seguro en línea en la Ciudad de México. Tarifa cerrada antes de subir, conductores verificados ante la SEMOVI y servicio 24/7.",

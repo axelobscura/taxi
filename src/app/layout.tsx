@@ -23,8 +23,8 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE.url),
   applicationName: SITE.name,
   title: {
-    default: "Taxi en CDMX las 24 horas · Pide en línea | TAXI_MEX",
-    template: "%s | TAXI_MEX",
+    default: "Taxi en CDMX las 24 horas · Pide en línea | TAXI-MEX",
+    template: "%s | TAXI-MEX",
   },
   description: SITE.description,
   // No canonical here: it would be inherited by every page that doesn't set

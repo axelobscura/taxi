@@ -1,6 +1,7 @@
 import { ImageResponse } from "next/og";
+import CarIcon from "@/components/CarIcon";
 
-export const alt = "TAXI_MEX · Taxi seguro en la CDMX con tarifa cerrada";
+export const alt = "TAXI-MEX · Taxi seguro en la CDMX con tarifa cerrada";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -31,14 +32,9 @@ export default function Image() {
               justifyContent: "center",
             }}
           >
-            <svg width="56" height="56" viewBox="0 0 24 24" fill="none">
-              <path d="M4 15h16v-4l-2.6-4.1a2 2 0 0 0-1.7-.9H8.3a2 2 0 0 0-1.7.9L4 11Z" fill="#111" />
-              <rect x="9.2" y="2.4" width="5.6" height="2.6" rx="0.8" fill="#111" />
-              <circle cx="7.8" cy="16.6" r="1.9" fill="#111" />
-              <circle cx="16.2" cy="16.6" r="1.9" fill="#111" />
-            </svg>
+            <CarIcon size={60} />
           </div>
-          <div style={{ fontSize: 48, fontWeight: 800 }}>TAXI_MEX</div>
+          <div style={{ fontSize: 48, fontWeight: 800 }}>TAXI-MEX</div>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column" }}>
