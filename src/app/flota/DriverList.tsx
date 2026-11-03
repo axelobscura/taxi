@@ -6,8 +6,8 @@ import type { DriverRow } from "@/lib/drivers";
 import { changeStatus, removeDriver } from "./actions";
 
 const STATUS: Record<string, { label: string; cls: string }> = {
-  available: { label: "Disponible", cls: "bg-jade text-ink" },
-  busy: { label: "En viaje", cls: "bg-gold text-ink" },
+  available: { label: "Disponible", cls: "bg-jade text-coal" },
+  busy: { label: "En viaje", cls: "bg-gold text-coal" },
   offline: { label: "Fuera", cls: "bg-ink-line text-muted" },
 };
 
@@ -33,8 +33,8 @@ export default function DriverList({ drivers }: { drivers: DriverRow[] }) {
         const tier = TIERS.find((t) => t.id === d.tier);
         const st = STATUS[d.status] ?? STATUS.offline;
         return (
-          <li key={d.id} className="cut-tr flex items-center gap-3 bg-ink-soft p-3">
-            <div className="grid size-11 shrink-0 place-items-center bg-rosa font-display text-sm font-extrabold text-white">
+          <li key={d.id} className="flex items-center gap-3 bg-ink-soft p-3">
+            <div className="grid size-11 shrink-0 place-items-center bg-taxi font-display text-sm font-extrabold text-coal">
               {d.name
                 .split(" ")
                 .slice(0, 2)
@@ -89,7 +89,7 @@ export default function DriverList({ drivers }: { drivers: DriverRow[] }) {
                     });
                   }
                 }}
-                className="border border-ink-line px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-muted transition hover:border-rosa hover:text-rosa"
+                className="border border-ink-line px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-muted transition hover:border-taxi hover:text-accent"
               >
                 Quitar
               </button>

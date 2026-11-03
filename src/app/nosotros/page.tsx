@@ -1,11 +1,12 @@
 import Link from "next/link";
 import PageShell from "@/components/PageShell";
+import { pageMetadata } from "@/lib/site";
 
-export const metadata = {
-  title: "Nosotros · TAXI_MEX",
-  description:
-    "Quiénes somos: taxis verificados en la Ciudad de México, conductores acreditados ante la SEMOVI y viajes 24/7.",
-};
+export const metadata = pageMetadata(
+  "/nosotros",
+  "Nosotros: taxis verificados en la Ciudad de México",
+  "Quiénes somos: taxis verificados en la Ciudad de México, conductores acreditados ante la SEMOVI y viajes 24/7.",
+);
 
 const VALUES = [
   {
@@ -46,8 +47,8 @@ export default function NosotrosPage() {
     >
       <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {STATS.map((s) => (
-          <div key={s.label} className="cut-tr border-l-2 border-rosa bg-ink-soft p-4">
-            <p className="font-display text-3xl font-extrabold text-rosa">
+          <div key={s.label} className="border-l-2 border-taxi bg-ink-soft p-4">
+            <p className="font-display text-3xl font-extrabold text-accent">
               {s.value}
             </p>
             <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted">
@@ -63,8 +64,8 @@ export default function NosotrosPage() {
         </h2>
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           {VALUES.map((v) => (
-            <article key={v.n} className="cut-tr bg-ink-soft p-5">
-              <span className="font-display text-[11px] font-bold text-rosa">
+            <article key={v.n} className="bg-ink-soft p-5">
+              <span className="font-display text-[11px] font-bold text-accent">
                 {v.n}
               </span>
               <h3 className="mt-1 font-display text-lg font-extrabold uppercase">
@@ -76,7 +77,7 @@ export default function NosotrosPage() {
         </div>
       </section>
 
-      <section className="mt-12 border-l-2 border-rosa bg-ink-soft p-6">
+      <section className="mt-12 border-l-2 border-taxi bg-ink-soft p-6">
         <h2 className="font-display text-2xl font-extrabold uppercase">
           Seguridad primero
         </h2>
@@ -104,13 +105,13 @@ export default function NosotrosPage() {
         <div className="mt-5 flex flex-wrap gap-3">
           <Link
             href="/contacto"
-            className="skewed-btn glow-rosa bg-rosa px-8 py-3.5 font-display text-sm font-extrabold uppercase tracking-widest text-white transition active:scale-[0.98]"
+            className="bg-taxi px-8 py-3.5 font-display text-sm font-extrabold uppercase tracking-widest text-coal transition active:scale-[0.98]"
           >
             <span className="block">Contáctanos</span>
           </Link>
           <Link
             href="/entrar"
-            className="border-2 border-ink-line px-6 py-3.5 font-display text-sm font-extrabold uppercase tracking-widest text-muted transition hover:border-rosa hover:text-rosa"
+            className="border-2 border-ink-line px-6 py-3.5 font-display text-sm font-extrabold uppercase tracking-widest text-muted transition hover:border-taxi hover:text-accent"
           >
             Panel de flota
           </Link>

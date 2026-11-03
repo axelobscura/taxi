@@ -35,7 +35,7 @@ export default function MenuOverlay() {
         onClick={() => setOpen(true)}
         aria-label="Abrir menú"
         aria-expanded={open}
-        className="grid size-9 place-items-center text-white transition hover:bg-black/15"
+        className="grid size-10 place-items-center rounded-md bg-taxi text-coal transition hover:bg-taxi-bright"
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
           <path d="M4 7h16M4 12h16M4 17h10" />
@@ -57,7 +57,7 @@ export default function MenuOverlay() {
               onClick={() => setOpen(false)}
               aria-label="Cerrar menú"
               autoFocus
-              className="grid size-10 place-items-center bg-rosa text-white transition hover:bg-rosa-deep"
+              className="grid size-10 place-items-center bg-taxi text-coal transition hover:bg-taxi-deep"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                 <path d="M6 6l12 12M18 6L6 18" />
@@ -80,7 +80,7 @@ export default function MenuOverlay() {
                   }`}
                   style={{ animation: `rise 0.4s ${i * 60}ms both` }}
                 >
-                  <span className="font-display text-[11px] font-bold tabular-nums text-rosa">
+                  <span className="font-display text-[11px] font-bold tabular-nums text-accent">
                     {isStaff ? "→" : `0${i + 1}`}
                   </span>
                   <span
@@ -88,10 +88,10 @@ export default function MenuOverlay() {
                       isStaff ? "text-2xl sm:text-3xl" : "text-4xl sm:text-5xl"
                     } ${
                       active
-                        ? "text-rosa"
+                        ? "text-accent"
                         : isStaff
-                          ? "text-muted group-hover:text-rosa"
-                          : "text-cream group-hover:text-rosa"
+                          ? "text-muted group-hover:text-accent"
+                          : "text-cream group-hover:text-accent"
                     }`}
                   >
                     {item.label}

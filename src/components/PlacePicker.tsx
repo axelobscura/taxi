@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { PLACES, type Place } from "@/lib/data";
 
 type Props = {
@@ -13,6 +13,19 @@ type Props = {
 export default function PlacePicker({ origin, destination, onPick, onSwap }: Props) {
   const [active, setActive] = useState<"origin" | "destination" | null>("destination");
   const [query, setQuery] = useState("");
+  const input = useRef<HTMLInputElement>(null);
+  // Focus the search only after the rider picks a field. Focusing on mount
+  // would scroll the page down to the booking card as soon as it loads.
+  const touched = useRef(false);
+
+  useEffect(() => {
+    if (touched.current) input.current?.focus();
+  }, [active]);
+
+  function open(field: "origin" | "destination") {
+    touched.current = true;
+    setActive(field);
+  }
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -41,7 +54,7 @@ export default function PlacePicker({ origin, destination, onPick, onSwap }: Pro
     <div className="space-y-3">
       <div className="glass relative p-2">
         {/* Connector between the two dots */}
-        <div className="pointer-events-none absolute left-[26px] top-[38px] bottom-[38px] w-px bg-gradient-to-b from-jade via-ink-line to-rosa" />
+        <div className="pointer-events-none absolute left-[26px] top-[38px] bottom-[38px] w-px bg-gradient-to-b from-jade via-ink-line to-taxi" />
 
         <Field
           dot={<span className="block size-2.5 rounded-full bg-jade" />}
@@ -49,23 +62,23 @@ export default function PlacePicker({ origin, destination, onPick, onSwap }: Pro
           value={origin?.name}
           zone={origin?.zone}
           isActive={active === "origin"}
-          onClick={() => setActive("origin")}
+          onClick={() => open("origin")}
         />
 
         <Field
-          dot={<span className="block size-2.5 bg-rosa" />}
+          dot={<span className="block size-2.5 bg-taxi" />}
           label="Destino"
           value={destination?.name}
           zone={destination?.zone}
           isActive={active === "destination"}
-          onClick={() => setActive("destination")}
+          onClick={() => open("destination")}
         />
 
         <button
           type="button"
           onClick={onSwap}
           aria-label="Invertir origen y destino"
-          className="absolute right-3 top-1/2 grid size-10 -translate-y-1/2 place-items-center bg-rosa text-white [clip-path:polygon(22%_0,100%_0,78%_100%,0_100%)] transition hover:bg-rosa-deep active:scale-90"
+          className="absolute right-3 top-1/2 grid size-10 -translate-y-1/2 place-items-center bg-taxi text-coal transition hover:bg-taxi-deep active:scale-90"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M7 16V4m0 0L3 8m4-4 4 4" />
@@ -82,7 +95,7 @@ export default function PlacePicker({ origin, destination, onPick, onSwap }: Pro
               <path d="m20 20-3.5-3.5" strokeLinecap="round" />
             </svg>
             <input
-              autoFocus
+              ref={input}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={
@@ -150,7 +163,7 @@ function Field({
     >
       <span className="grid size-5 shrink-0 place-items-center">{dot}</span>
       <span className="min-w-0 flex-1">
-        <span className="block text-[10px] font-bold uppercase tracking-[0.18em] text-rosa">
+        <span className="block text-[10px] font-bold uppercase tracking-[0.18em] text-accent">
           {label}
         </span>
         <span

@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Logo from "@/components/Logo";
 import { useActionState, useState } from "react";
 import { login, register, type AuthState } from "./actions";
 
@@ -32,22 +32,9 @@ function Shell({
   return (
     <main className="flex min-h-dvh flex-col justify-center px-4 py-10">
       <div className="mx-auto w-full max-w-sm">
-        <Link href="/" className="mb-8 flex items-center gap-2.5">
-          <div className="grid size-9 place-items-center bg-rosa">
-            <svg width="19" height="19" viewBox="0 0 24 24" fill="none">
-              <path d="M4 15h16v-4l-2.6-4.1a2 2 0 0 0-1.7-.9H8.3a2 2 0 0 0-1.7.9L4 11Z" fill="white" />
-              <rect x="9.2" y="2.4" width="5.6" height="2.6" rx="0.8" fill="white" />
-              <circle cx="7.8" cy="16.6" r="1.9" fill="#0b0b0f" />
-              <circle cx="16.2" cy="16.6" r="1.9" fill="#0b0b0f" />
-            </svg>
-          </div>
-          <div className="leading-none">
-            <p className="font-display text-lg font-extrabold">TAXI_MEX</p>
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted">
-              Panel de flota
-            </p>
-          </div>
-        </Link>
+        <div className="mb-8">
+          <Logo sub="Panel de flota" />
+        </div>
 
         <p className="eyebrow mb-3">
           {mode === "login" ? "Acceso de operadores" : "Nueva cuenta"}
@@ -97,7 +84,7 @@ function Fields({ mode }: { mode: "login" | "register" }) {
       {state.error && (
         <p
           role="alert"
-          className="border-l-2 border-rosa bg-rosa/10 px-3 py-2 text-sm text-rosa"
+          className="border-l-2 border-taxi bg-taxi/10 px-3 py-2 text-sm text-accent"
         >
           {state.error}
         </p>
@@ -106,7 +93,7 @@ function Fields({ mode }: { mode: "login" | "register" }) {
       <button
         type="submit"
         disabled={pending}
-        className="skewed-btn glow-rosa w-full bg-rosa py-4 font-display text-sm font-extrabold uppercase tracking-widest text-white transition active:scale-[0.98] disabled:opacity-60"
+        className="w-full bg-taxi py-4 font-display text-sm font-extrabold uppercase tracking-widest text-coal transition active:scale-[0.98] disabled:opacity-60"
       >
         <span className="block">
           {pending ? "Un momento…" : mode === "login" ? "Entrar" : "Crear cuenta"}
@@ -123,7 +110,7 @@ function Input({
 }: { label: string; name: string } & React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <label className="block bg-ink-soft px-3 py-2.5">
-      <span className="block text-[10px] font-bold uppercase tracking-[0.18em] text-rosa">
+      <span className="block text-[10px] font-bold uppercase tracking-[0.18em] text-accent">
         {label}
       </span>
       <input

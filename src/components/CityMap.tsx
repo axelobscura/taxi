@@ -140,13 +140,13 @@ export default function CityMap({ origin, destination, driving = false }: Props)
 
         // Wide soft stroke underneath, crisp stroke on top.
         const halo = L.polyline(path, {
-          color: "#ff2d78",
+          color: "#ffc107",
           weight: 12,
           opacity: 0.18,
           lineCap: "round",
         }).addTo(m);
         const line = L.polyline(path, {
-          color: "#ff2d78",
+          color: "#ffc107",
           weight: 4,
           opacity: 0.95,
           lineCap: "round",
@@ -175,25 +175,14 @@ export default function CityMap({ origin, destination, driving = false }: Props)
           carFrame.current = requestAnimationFrame(loop);
         }
 
-        // Keep the route in the upper band, clear of the booking sheet.
         m.fitBounds(L.latLngBounds(path), {
-          paddingTopLeft: [40, 60],
-          paddingBottomRight: [40, 380],
+          padding: [28, 28],
           animate: true,
           duration: 0.8,
         });
       } else if (origin || destination) {
         const p = (origin ?? destination)!;
-        // Offset the centre south so the marker rises above the sheet.
-        const b = L.latLngBounds(
-          [p.lat - 0.004, p.lng - 0.02],
-          [p.lat + 0.004, p.lng + 0.02],
-        );
-        m.fitBounds(b, {
-          paddingTopLeft: [30, 40],
-          paddingBottomRight: [30, 400],
-          animate: true,
-        });
+        m.setView([p.lat, p.lng], 14, { animate: true });
       }
     })();
 
@@ -205,9 +194,8 @@ export default function CityMap({ origin, destination, driving = false }: Props)
   return (
     <div className="absolute inset-0">
       <div ref={holder} className="h-full w-full" />
-      {/* Vignette keeps the booking sheet legible over the map. */}
-      <div className="pointer-events-none absolute inset-0 z-[500] bg-[radial-gradient(ellipse_at_50%_30%,transparent_40%,rgba(11,11,15,0.7)_100%)]" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[500] h-1/2 bg-gradient-to-t from-ink via-ink/92 to-transparent" />
+      {/* Soft vignette so the panel edges frame the route. */}
+      <div className="pointer-events-none absolute inset-0 z-[500] bg-[radial-gradient(ellipse_at_50%_50%,transparent_55%,rgba(17,17,17,0.6)_100%)]" />
     </div>
   );
 }

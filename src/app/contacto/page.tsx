@@ -1,11 +1,12 @@
 import PageShell from "@/components/PageShell";
 import ContactForm from "./ContactForm";
+import { pageMetadata } from "@/lib/site";
 
-export const metadata = {
-  title: "Contacto · TAXI_MEX",
-  description:
-    "Escríbenos o llámanos. Atención 24/7 para viajes, facturación y altas de conductores en la CDMX.",
-};
+export const metadata = pageMetadata(
+  "/contacto",
+  "Contacto: atención 24/7 y facturación",
+  "Escríbenos o llámanos. Atención 24/7 para viajes, facturación y altas de conductores en la CDMX.",
+);
 
 const CHANNELS = [
   {
@@ -54,9 +55,9 @@ export default function ContactoPage() {
             <a
               key={c.label}
               href={c.href}
-              className="cut-tr block border-l-2 border-rosa bg-ink-soft p-4 transition hover:bg-ink-raised"
+              className="block border-l-2 border-taxi bg-ink-soft p-4 transition hover:bg-ink-raised"
             >
-              <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-rosa">
+              <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-accent">
                 {c.label}
               </p>
               <p className="font-display text-base font-extrabold">{c.value}</p>
@@ -64,8 +65,8 @@ export default function ContactoPage() {
             </a>
           ))}
 
-          <div className="cut-tr bg-ink-soft p-4">
-            <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-rosa">
+          <div className="bg-ink-soft p-4">
+            <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-accent">
               Cobertura
             </p>
             <p className="mt-1 text-sm leading-relaxed text-muted">
@@ -74,8 +75,8 @@ export default function ContactoPage() {
             </p>
           </div>
 
-          <div className="cut-tr bg-ink-soft p-4">
-            <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-rosa">
+          <div className="bg-ink-soft p-4">
+            <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-accent">
               Emergencias
             </p>
             <p className="mt-1 text-sm leading-relaxed text-muted">

@@ -13,10 +13,10 @@ const ACCENT: Record<
   string,
   { ring: string; text: string; glow: string; badge: string }
 > = {
-  rosa: { ring: "border-rosa", text: "text-rosa", glow: "shadow-[0_0_30px_-8px_var(--color-rosa)]", badge: "bg-rosa text-white" },
-  jade: { ring: "border-jade", text: "text-jade", glow: "shadow-[0_0_30px_-8px_var(--color-jade)]", badge: "bg-jade text-ink" },
-  violet: { ring: "border-violet", text: "text-violet", glow: "shadow-[0_0_30px_-8px_var(--color-violet)]", badge: "bg-violet text-white" },
-  gold: { ring: "border-gold", text: "text-gold", glow: "shadow-[0_0_30px_-8px_var(--color-gold)]", badge: "bg-gold text-ink" },
+  taxi: { ring: "border-taxi", text: "text-accent", glow: "shadow-[0_0_30px_-8px_var(--color-taxi)]", badge: "bg-taxi text-coal" },
+  jade: { ring: "border-jade", text: "text-jade", glow: "shadow-[0_0_30px_-8px_var(--color-jade)]", badge: "bg-jade text-coal" },
+  violet: { ring: "border-violet", text: "text-violet", glow: "shadow-[0_0_30px_-8px_var(--color-violet)]", badge: "bg-violet text-snow" },
+  gold: { ring: "border-gold", text: "text-gold", glow: "shadow-[0_0_30px_-8px_var(--color-gold)]", badge: "bg-gold text-coal" },
 };
 
 export default function TierSelect({ selected, onSelect, km, min }: Props) {
@@ -31,7 +31,7 @@ export default function TierSelect({ selected, onSelect, km, min }: Props) {
             type="button"
             onClick={() => onSelect(tier.id)}
             aria-pressed={isOn}
-            className={`cut-tr flex w-full items-center gap-3 border-2 p-3 text-left transition-all duration-200 active:scale-[0.99] ${
+            className={`flex w-full items-center gap-3 border-2 p-3 text-left transition-all duration-200 active:scale-[0.99] ${
               isOn
                 ? `${accent.ring} bg-ink-raised ${accent.glow}`
                 : "border-transparent bg-ink-soft/80 hover:bg-ink-raised"

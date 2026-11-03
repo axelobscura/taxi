@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef } from "react";
+import { track } from "@/lib/analytics";
 import { sendMessage, type ContactState } from "./actions";
 
 const EMPTY: ContactState = {};
@@ -10,8 +11,10 @@ export default function ContactForm() {
   const form = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
-    if (state.ok) form.current?.reset();
-  }, [state.ok]);
+    if (!state.ok) return;
+    track("generate_lead", { method: "contact_form" });
+    form.current?.reset();
+  }, [state]);
 
   return (
     <form ref={form} action={formAction} className="space-y-2 bg-ink-soft p-5">
@@ -25,7 +28,7 @@ export default function ContactForm() {
       />
 
       <label className="block bg-ink px-3 py-2">
-        <span className="block text-[10px] font-bold uppercase tracking-[0.15em] text-rosa">
+        <span className="block text-[10px] font-bold uppercase tracking-[0.15em] text-accent">
           Asunto
         </span>
         <select
@@ -41,7 +44,7 @@ export default function ContactForm() {
       </label>
 
       <label className="block bg-ink px-3 py-2">
-        <span className="block text-[10px] font-bold uppercase tracking-[0.15em] text-rosa">
+        <span className="block text-[10px] font-bold uppercase tracking-[0.15em] text-accent">
           Mensaje
         </span>
         <textarea
@@ -54,7 +57,7 @@ export default function ContactForm() {
       </label>
 
       {state.error && (
-        <p role="alert" className="border-l-2 border-rosa bg-rosa/10 px-3 py-2 text-sm text-rosa">
+        <p role="alert" className="border-l-2 border-taxi bg-taxi/10 px-3 py-2 text-sm text-accent">
           {state.error}
         </p>
       )}
@@ -67,7 +70,7 @@ export default function ContactForm() {
       <button
         type="submit"
         disabled={pending}
-        className="skewed-btn glow-rosa w-full bg-rosa py-3.5 font-display text-sm font-extrabold uppercase tracking-widest text-white transition active:scale-[0.98] disabled:opacity-60"
+        className="w-full bg-taxi py-3.5 font-display text-sm font-extrabold uppercase tracking-widest text-coal transition active:scale-[0.98] disabled:opacity-60"
       >
         <span className="block">{pending ? "Enviando…" : "Enviar mensaje"}</span>
       </button>
@@ -82,7 +85,7 @@ function Field({
 }: { label: string; name: string } & React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <label className="block bg-ink px-3 py-2">
-      <span className="block text-[10px] font-bold uppercase tracking-[0.15em] text-rosa">
+      <span className="block text-[10px] font-bold uppercase tracking-[0.15em] text-accent">
         {label}
       </span>
       <input

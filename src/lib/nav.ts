@@ -3,6 +3,7 @@ export const NAV = [
   { href: "/", label: "Pedir taxi" },
   { href: "/servicios", label: "Servicios" },
   { href: "/tarifas", label: "Tarifas" },
+  { href: "/taxi", label: "Cobertura" },
   { href: "/nosotros", label: "Nosotros" },
   { href: "/contacto", label: "Contacto" },
   { href: "/entrar", label: "Entrar" },

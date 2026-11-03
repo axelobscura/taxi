@@ -42,7 +42,7 @@ export default function DriverCard({ driver, tier, fare, onCancel }: Props) {
         </div>
 
         <div className="mt-4 flex items-center gap-3">
-          <div className="relative grid size-14 shrink-0 place-items-center bg-rosa font-display text-xl font-extrabold text-white">
+          <div className="relative grid size-14 shrink-0 place-items-center bg-taxi font-display text-xl font-extrabold text-coal">
             {initialsOf(driver.name)}
           </div>
           <div className="min-w-0 flex-1">
@@ -69,7 +69,7 @@ export default function DriverCard({ driver, tier, fare, onCancel }: Props) {
         <div className="mt-4 grid grid-cols-2 gap-2">
           <a
             href={`tel:${driver.phone.replace(/\s/g, "")}`}
-            className="cut-tr flex items-center justify-center gap-2 border-2 border-ink-line bg-ink-raised py-3 text-xs font-bold uppercase tracking-widest transition hover:border-rosa hover:text-rosa"
+            className="flex items-center justify-center gap-2 border-2 border-ink-line bg-ink-raised py-3 text-xs font-bold uppercase tracking-widest transition hover:border-taxi hover:text-accent"
           >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.2a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2Z" />
@@ -78,7 +78,7 @@ export default function DriverCard({ driver, tier, fare, onCancel }: Props) {
           </a>
           <button
             type="button"
-            className="cut-tr flex items-center justify-center gap-2 border-2 border-ink-line bg-ink-raised py-3 text-xs font-bold uppercase tracking-widest transition hover:border-rosa hover:text-rosa"
+            className="flex items-center justify-center gap-2 border-2 border-ink-line bg-ink-raised py-3 text-xs font-bold uppercase tracking-widest transition hover:border-taxi hover:text-accent"
           >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.9 8.9 0 0 1-4-.9L3 20l1.1-4.6a8.4 8.4 0 0 1-.9-3.9 8.4 8.4 0 0 1 9-8.4 8.4 8.4 0 0 1 8.8 8.4Z" />
@@ -90,14 +90,14 @@ export default function DriverCard({ driver, tier, fare, onCancel }: Props) {
 
       <div className="glass flex items-center gap-3 p-4">
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-rosa">Total estimado</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-accent">Total estimado</p>
           <p className="font-display text-2xl font-bold tabular-nums">{mxn(fare)}</p>
           <p className="text-xs text-muted">{tier.name} · Efectivo o tarjeta</p>
         </div>
         <button
           type="button"
           onClick={onCancel}
-          className="skewed shrink-0 border-2 border-ink-line px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-muted transition hover:border-rosa hover:text-rosa"
+          className="shrink-0 border-2 border-ink-line px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-muted transition hover:border-taxi hover:text-accent"
         >
           Cancelar
         </button>

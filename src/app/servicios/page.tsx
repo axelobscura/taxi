@@ -1,12 +1,13 @@
 import Link from "next/link";
 import PageShell from "@/components/PageShell";
-import { TIERS, mxn } from "@/lib/data";
+import { TIERS, mxn, mxnRate } from "@/lib/data";
+import { pageMetadata } from "@/lib/site";
 
-export const metadata = {
-  title: "Servicios · TAXI_MEX",
-  description:
-    "Cuatro categorías de taxi en la CDMX: Eco, Rosa, Confort y XL. Elige según presupuesto, espacio y comodidad.",
-};
+export const metadata = pageMetadata(
+  "/servicios",
+  "Servicios de taxi en CDMX: Eco, Rosa, Confort y XL",
+  "Cuatro categorías de taxi en la CDMX: Eco, Rosa, Confort y XL para hasta 6 pasajeros. Elige según presupuesto, espacio y comodidad.",
+);
 
 /** Sample 10 km / 33 min trip, so the tiers are comparable at a glance. */
 const SAMPLE_KM = 10;
@@ -50,13 +51,13 @@ export default function ServiciosPage() {
           return (
             <article
               key={tier.id}
-              className="cut-tr flex flex-col border-l-2 border-rosa bg-ink-soft p-5"
+              className="flex flex-col border-l-2 border-taxi bg-ink-soft p-5"
             >
               <div className="flex items-baseline justify-between gap-3">
                 <h2 className="font-display text-2xl font-extrabold uppercase">
                   {tier.name}
                 </h2>
-                <span className="bg-rosa px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
+                <span className="bg-taxi px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-coal">
                   {tier.eta} min
                 </span>
               </div>
@@ -65,7 +66,7 @@ export default function ServiciosPage() {
               <ul className="mt-4 flex-1 space-y-2">
                 {DETAIL[tier.id].map((line) => (
                   <li key={line} className="flex gap-2 text-sm text-muted">
-                    <span aria-hidden className="mt-1.5 block size-1.5 shrink-0 bg-rosa" />
+                    <span aria-hidden className="mt-1.5 block size-1.5 shrink-0 bg-taxi" />
                     {line}
                   </li>
                 ))}
@@ -73,7 +74,7 @@ export default function ServiciosPage() {
 
               <dl className="mt-5 grid grid-cols-3 gap-2 border-t border-ink-line pt-4 text-center">
                 <Cell label="Banderazo" value={mxn(tier.base)} />
-                <Cell label="Por km" value={mxn(tier.perKm)} />
+                <Cell label="Por km" value={mxnRate(tier.perKm)} />
                 <Cell label="Plazas" value={String(tier.seats)} />
               </dl>
 
@@ -88,7 +89,7 @@ export default function ServiciosPage() {
         })}
       </div>
 
-      <div className="mt-10 flex flex-col items-start gap-4 border-l-2 border-rosa bg-ink-soft p-6 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mt-10 flex flex-col items-start gap-4 border-l-2 border-taxi bg-ink-soft p-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="font-display text-xl font-extrabold uppercase">
             ¿Listo para pedir?
@@ -99,7 +100,7 @@ export default function ServiciosPage() {
         </div>
         <Link
           href="/"
-          className="skewed-btn glow-rosa shrink-0 bg-rosa px-8 py-3.5 font-display text-sm font-extrabold uppercase tracking-widest text-white transition active:scale-[0.98]"
+          className="shrink-0 bg-taxi px-8 py-3.5 font-display text-sm font-extrabold uppercase tracking-widest text-coal transition active:scale-[0.98]"
         >
           <span className="block">Pedir taxi</span>
         </Link>

@@ -7,13 +7,15 @@ import {
   durationMin,
   fareFor,
   mxn,
+  mxnRate,
 } from "@/lib/data";
+import { pageMetadata } from "@/lib/site";
 
-export const metadata = {
-  title: "Tarifas · TAXI_MEX",
-  description:
-    "Cómo se calcula la tarifa: banderazo, costo por kilómetro y por minuto. Ejemplos de rutas reales en la CDMX.",
-};
+export const metadata = pageMetadata(
+  "/tarifas",
+  "Tarifas de taxi en CDMX: banderazo y precio por km",
+  "Cuánto cuesta un taxi en la CDMX: banderazo, costo por kilómetro y por minuto, y precios de rutas reales como Ángel–Aeropuerto o Polanco–Santa Fe.",
+);
 
 const place = (name: string) => PLACES.find((p) => p.name === name)!;
 
@@ -63,7 +65,7 @@ export default function TarifasPage() {
         <div className="mt-4 overflow-x-auto">
           <table className="w-full min-w-[520px] border-collapse text-sm">
             <thead>
-              <tr className="border-b-2 border-rosa text-left">
+              <tr className="border-b-2 border-taxi text-left">
                 <Th>Categoría</Th>
                 <Th align="right">Banderazo</Th>
                 <Th align="right">Por km</Th>
@@ -80,8 +82,8 @@ export default function TarifasPage() {
                     </span>
                   </Td>
                   <Td align="right">{mxn(t.base)}</Td>
-                  <Td align="right">{mxn(t.perKm)}</Td>
-                  <Td align="right">{mxn(t.perMin)}</Td>
+                  <Td align="right">{mxnRate(t.perKm)}</Td>
+                  <Td align="right">{mxnRate(t.perMin)}</Td>
                   <Td align="right">{t.seats}</Td>
                 </tr>
               ))}
@@ -107,7 +109,7 @@ export default function TarifasPage() {
             return (
               <li
                 key={`${from}-${to}`}
-                className="cut-tr flex flex-wrap items-center gap-x-4 gap-y-1 border-l-2 border-rosa bg-ink-soft p-4"
+                className="flex flex-wrap items-center gap-x-4 gap-y-1 border-l-2 border-taxi bg-ink-soft p-4"
               >
                 <span className="min-w-0 flex-1 text-sm">
                   {from} <span className="text-muted">→</span> {to}
@@ -130,13 +132,13 @@ export default function TarifasPage() {
         </p>
       </section>
 
-      <div className="mt-10 flex flex-col items-start gap-4 border-l-2 border-rosa bg-ink-soft p-6 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mt-10 flex flex-col items-start gap-4 border-l-2 border-taxi bg-ink-soft p-6 sm:flex-row sm:items-center sm:justify-between">
         <p className="font-display text-xl font-extrabold uppercase">
           Calcula tu viaje
         </p>
         <Link
           href="/"
-          className="skewed-btn glow-rosa shrink-0 bg-rosa px-8 py-3.5 font-display text-sm font-extrabold uppercase tracking-widest text-white transition active:scale-[0.98]"
+          className="shrink-0 bg-taxi px-8 py-3.5 font-display text-sm font-extrabold uppercase tracking-widest text-coal transition active:scale-[0.98]"
         >
           <span className="block">Ver mi tarifa</span>
         </Link>
@@ -147,8 +149,8 @@ export default function TarifasPage() {
 
 function Formula({ n, title, body }: { n: string; title: string; body: string }) {
   return (
-    <div className="cut-tr bg-ink-soft p-5">
-      <span className="font-display text-[11px] font-bold text-rosa">{n}</span>
+    <div className="bg-ink-soft p-5">
+      <span className="font-display text-[11px] font-bold text-accent">{n}</span>
       <h3 className="mt-1 font-display text-base font-extrabold uppercase">
         {title}
       </h3>

@@ -38,7 +38,7 @@ export const TIERS: Tier[] = [
     perMin: 1.8,
     seats: 4,
     eta: 3,
-    accent: "rosa",
+    accent: "taxi",
   },
   {
     id: "confort",
@@ -89,6 +89,8 @@ export const PLACES: Place[] = [
   { name: "Arena Ciudad de México", zone: "Azcapotzalco", lat: 19.5030, lng: -99.1960 },
   { name: "Estadio Azteca", zone: "Coyoacán", lat: 19.3029, lng: -99.1505 },
   { name: "Terminal Norte", zone: "Gustavo A. Madero", lat: 19.4790, lng: -99.1400 },
+  { name: "TAPO", zone: "Venustiano Carranza", lat: 19.4298, lng: -99.1130 },
+  { name: "Central del Sur", zone: "Coyoacán", lat: 19.3441, lng: -99.1404 },
   { name: "Insurgentes Sur", zone: "Del Valle", lat: 19.3760, lng: -99.1780 },
   { name: "Mercado de La Merced", zone: "Venustiano Carranza", lat: 19.4256, lng: -99.1246 },
 ];
@@ -143,6 +145,17 @@ export function durationMin(km: number): number {
 export function fareFor(tier: Tier, km: number, min: number): number {
   return Math.round(tier.base + km * tier.perKm + min * tier.perMin);
 }
+
+/**
+ * Per-km and per-minute rates keep their centavos ($6.50, $1.40): rounding
+ * them like fares would misstate the tariff.
+ */
+export const mxnRate = (n: number) =>
+  new Intl.NumberFormat("es-MX", {
+    style: "currency",
+    currency: "MXN",
+    minimumFractionDigits: Number.isInteger(n) ? 0 : 2,
+  }).format(n);
 
 export const mxn = (n: number) =>
   new Intl.NumberFormat("es-MX", {
