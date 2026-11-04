@@ -1,19 +1,28 @@
 import type { Viewport } from "next";
-import { Montserrat, Outfit } from "next/font/google";
+import localFont from "next/font/local";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import ContactClickTracker from "./ContactClickTracker";
 import "@/app/globals.css";
 
-const montserrat = Montserrat({
+/*
+ * Self-hosted (latin, variable weight) rather than `next/font/google`: the
+ * Google loader fetches fonts at build time, and on the production host
+ * Google served Outfit from an extensionless URL the loader can't parse,
+ * failing the build. Local files also mean builds need no network.
+ * Both fonts are SIL Open Font License.
+ */
+const montserrat = localFont({
+  src: "../fonts/montserrat-latin.woff2",
   variable: "--font-display",
-  subsets: ["latin"],
-  weight: ["600", "700", "800", "900"],
+  weight: "600 900",
+  display: "swap",
 });
 
-const outfit = Outfit({
+const outfit = localFont({
+  src: "../fonts/outfit-latin.woff2",
   variable: "--font-sans",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
+  weight: "300 700",
+  display: "swap",
 });
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
