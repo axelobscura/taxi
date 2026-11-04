@@ -142,7 +142,7 @@ export default async function Home() {
 
         {/* Hero: taxi parked over the yellow band. */}
         <section className="hero-lines bg-coal px-5 pt-28 text-center sm:pt-36">
-          <p className="eyebrow justify-center">{c.heroEyebrow}</p>
+          <p className="eyebrow justify-center text-sm sm:text-lg">{c.heroEyebrow}</p>
           <p className="mt-3 text-[11px] font-bold uppercase tracking-[0.3em] text-snow/60">
             {c.heroLine}
           </p>

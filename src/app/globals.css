@@ -104,7 +104,9 @@
   }
 }
 
-@layer utilities {
+/* Components sit below utilities, so a utility class (e.g. `text-lg`) on
+   the same element overrides these defaults. */
+@layer components {
   /* Small uppercase label above headings ("Pide tu taxi ahora"). */
   .eyebrow {
     display: flex;
@@ -116,7 +118,9 @@
     text-transform: uppercase;
     color: var(--color-accent);
   }
+}
 
+@layer utilities {
   /* Solid card surface for the booking panels. */
   .glass {
     background: var(--color-ink-soft);
