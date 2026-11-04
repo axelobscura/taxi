@@ -6,7 +6,7 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const status = url.searchParams.get("status") ?? undefined;
   const tier = url.searchParams.get("tier") ?? undefined;
-  return NextResponse.json({ drivers: listDrivers({ status, tier }) });
+  return NextResponse.json({ drivers: await listDrivers({ status, tier }) });
 }
 
 export async function POST(req: Request) {
@@ -31,11 +31,11 @@ export async function POST(req: Request) {
   }
 
   try {
-    const driver = createDriver(parsed.data, user.id);
+    const driver = await createDriver(parsed.data, user.id);
     return NextResponse.json({ driver }, { status: 201 });
   } catch (err) {
     // The plate column is UNIQUE.
-    if (String(err).includes("UNIQUE")) {
+    if ((err as { code?: string }).code === "ER_DUP_ENTRY") {
       return NextResponse.json(
         { error: "Ya existe un conductor con esa placa" },
         { status: 409 },

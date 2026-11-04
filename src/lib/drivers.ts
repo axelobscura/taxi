@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
-import { db } from "@/lib/db";
+import { execute, query, queryOne } from "@/lib/db";
 import { TIERS } from "@/lib/data";
 import "server-only";
 
@@ -48,7 +48,10 @@ export type DriverRow = {
   created_at: string;
 };
 
-export function listDrivers(filter?: { status?: string; tier?: string }): DriverRow[] {
+export function listDrivers(filter?: {
+  status?: string;
+  tier?: string;
+}): Promise<DriverRow[]> {
   const where: string[] = [];
   const args: string[] = [];
 
@@ -65,58 +68,56 @@ export function listDrivers(filter?: { status?: string; tier?: string }): Driver
     where.length ? `WHERE ${where.join(" AND ")}` : ""
   } ORDER BY status = 'available' DESC, rating DESC, created_at DESC`;
 
-  return db.prepare(sql).all(...args) as DriverRow[];
+  return query<DriverRow>(sql, args);
 }
 
-export function createDriver(input: DriverInput, userId: string): DriverRow {
+export async function createDriver(input: DriverInput, userId: string): Promise<DriverRow> {
   const id = randomUUID();
-  db.prepare(
+  await execute(
     `INSERT INTO drivers
        (id, name, phone, car_make, car_model, car_color, plate, seats,
         tier, status, lat, lng, created_by)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-  ).run(
-    id,
-    input.name,
-    input.phone,
-    input.car_make,
-    input.car_model,
-    input.car_color,
-    input.plate,
-    input.seats,
-    input.tier,
-    input.status,
-    input.lat ?? null,
-    input.lng ?? null,
-    userId,
+    [
+      id,
+      input.name,
+      input.phone,
+      input.car_make,
+      input.car_model,
+      input.car_color,
+      input.plate,
+      input.seats,
+      input.tier,
+      input.status,
+      input.lat ?? null,
+      input.lng ?? null,
+      userId,
+    ],
   );
-  return db.prepare(`SELECT * FROM drivers WHERE id = ?`).get(id) as DriverRow;
+  return (await queryOne<DriverRow>(`SELECT * FROM drivers WHERE id = ?`, [id]))!;
 }
 
-export function setDriverStatus(id: string, status: string): void {
-  db.prepare(
-    `UPDATE drivers SET status = ?, updated_at = datetime('now') WHERE id = ?`,
-  ).run(status, id);
+export async function setDriverStatus(id: string, status: string): Promise<void> {
+  await execute(`UPDATE drivers SET status = ? WHERE id = ?`, [status, id]);
 }
 
-export function deleteDriver(id: string): void {
-  db.prepare(`DELETE FROM drivers WHERE id = ?`).run(id);
+export async function deleteDriver(id: string): Promise<void> {
+  await execute(`DELETE FROM drivers WHERE id = ?`, [id]);
 }
 
 /**
  * Pick an available driver for a tier, preferring the closest one when the
  * pickup point is known. Falls back to any available driver.
  */
-export function assignDriver(
+export async function assignDriver(
   tier: string,
   near?: { lat: number; lng: number },
-): DriverRow | null {
-  const pool = db
-    .prepare(
-      `SELECT * FROM drivers WHERE status = 'available' AND tier = ?
-       ORDER BY rating DESC`,
-    )
-    .all(tier) as DriverRow[];
+): Promise<DriverRow | null> {
+  const pool = await query<DriverRow>(
+    `SELECT * FROM drivers WHERE status = 'available' AND tier = ?
+     ORDER BY rating DESC`,
+    [tier],
+  );
 
   if (pool.length === 0) return null;
   if (!near) return pool[0];

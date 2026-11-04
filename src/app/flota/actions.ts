@@ -24,9 +24,9 @@ export async function addDriver(
   }
 
   try {
-    createDriver(parsed.data, user.id);
+    await createDriver(parsed.data, user.id);
   } catch (err) {
-    if (String(err).includes("UNIQUE")) {
+    if ((err as { code?: string }).code === "ER_DUP_ENTRY") {
       return { error: "Ya existe un conductor con esa placa" };
     }
     throw err;
@@ -38,12 +38,12 @@ export async function addDriver(
 
 export async function changeStatus(id: string, status: string) {
   if (!(await currentUser())) return;
-  setDriverStatus(id, status);
+  await setDriverStatus(id, status);
   revalidatePath("/flota");
 }
 
 export async function removeDriver(id: string) {
   if (!(await currentUser())) return;
-  deleteDriver(id);
+  await deleteDriver(id);
   revalidatePath("/flota");
 }

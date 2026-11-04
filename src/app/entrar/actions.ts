@@ -33,7 +33,7 @@ export async function login(
     return { error: parsed.error.issues[0].message };
   }
 
-  const user = findUserByEmail(parsed.data.email);
+  const user = await findUserByEmail(parsed.data.email);
   // Same message either way, so the form does not reveal which emails exist.
   if (!user || !verifyPassword(parsed.data.password, user.password_hash)) {
     return { error: "Correo o contraseña incorrectos" };
@@ -56,11 +56,11 @@ export async function register(
     return { error: parsed.error.issues[0].message };
   }
 
-  if (findUserByEmail(parsed.data.email)) {
+  if (await findUserByEmail(parsed.data.email)) {
     return { error: "Ya existe una cuenta con ese correo" };
   }
 
-  const user = createUser(parsed.data.email, parsed.data.name, parsed.data.password);
+  const user = await createUser(parsed.data.email, parsed.data.name, parsed.data.password);
   await startSession(user.id);
   redirect("/flota");
 }

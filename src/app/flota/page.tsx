@@ -15,7 +15,7 @@ export default async function FlotaPage() {
   const user = await currentUser();
   if (!user) redirect("/entrar");
 
-  const drivers = listDrivers();
+  const drivers = await listDrivers();
   const available = drivers.filter((d) => d.status === "available").length;
   const busy = drivers.filter((d) => d.status === "busy").length;
 

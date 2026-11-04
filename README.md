@@ -11,8 +11,9 @@ cp .env.example .env.local   # opcional; hay valores por defecto
 npm run dev                  # http://localhost:3000
 ```
 
-La base de datos se crea sola en el primer arranque. Para empezar de cero:
-`rm -f data/rosa.db*` (con el servidor detenido).
+Necesita las variables `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD` y
+`DB_NAME` en `.env.local` (ver *Base de datos*). Las tablas se crean solas en
+la primera consulta.
 
 `npm run build` para producción, `npm run lint` para revisar el código.
 
@@ -149,8 +150,17 @@ todavía**: el mensaje se escribe en la consola del servidor
 
 ### Base de datos
 
-**SQLite** con `better-sqlite3`, archivo en `data/rosa.db` (ignorado por git).
-El esquema está en `src/lib/db/schema.sql` y se aplica solo al arrancar.
+**MySQL / MariaDB remoto** (Hostinger) con `mysql2`. La conexión se configura
+con las variables `DB_*` de `.env.local`; nunca van en el código. Si la
+contraseña lleva `#`, ponla entre comillas simples.
+
+El esquema está en `src/lib/db/schema.sql` y se aplica solo (con
+`CREATE TABLE IF NOT EXISTS`) en la primera consulta de cada proceso. Todas las
+fechas se guardan en UTC.
+
+Hostinger solo acepta conexiones desde IPs permitidas en hPanel →
+*Bases de datos* → *MySQL remoto*. Para Vercel, cuyas IPs cambian, hay que
+permitir cualquier host (`%`).
 
 Tres tablas: `users`, `sessions` y `drivers`.
 
@@ -174,55 +184,28 @@ origen. Si no hay ninguno, la app muestra el error en pantalla.
 
 ## Despliegue en Vercel
 
-El build funciona, pero **los datos no sobreviven**. Vercel monta el proyecto en
-solo lectura y el único directorio escribible es `/tmp`, así que ahí va el
-archivo SQLite (`src/lib/db/index.ts` lo detecta con la variable `VERCEL`).
-
-Ese `/tmp` es **por instancia y se borra en cada arranque en frío**. En la
-práctica:
-
-- Cada despliegue y cada arranque en frío deja la base vacía.
-- Dos instancias concurrentes tienen bases distintas: alguien que se registra en
-  una no puede entrar por la otra.
-- Las sesiones de `src/lib/auth.ts` viven en la base, así que la sesión se cae
-  sin aviso.
-
-Sirve para enseñar el prototipo, no para uso real. La salida es la migración de
-la sección siguiente.
+Configura las mismas variables `DB_*` en *Project Settings → Environment
+Variables*. Los datos viven en la base remota, así que sobreviven a despliegues
+y arranques en frío.
 
 Dos detalles que hacen falta para que el despliegue funcione:
 
 - La conexión es **perezosa**: `next build` evalúa cada módulo de ruta para leer
-  su configuración, y conectarse al importar hacía que el build dependiera de un
-  disco escribible.
+  su configuración, y conectarse al importar haría que el build dependiera de la
+  base.
 - `schema.sql` se lee en tiempo de ejecución con una ruta armada desde
   `process.cwd()`, que el trazador de archivos no puede seguir. Va declarado en
   `outputFileTracingIncludes` dentro de `next.config.ts`; si no, el bundle sale
   sin el archivo y toda consulta truena.
-
-## Migrar a Postgres remoto
-
-Pediste una base **SQL remota** y esto corre en SQLite local. El SQL se
-escribió portable para que el cambio sea acotado:
-
-1. `npm install pg` y provisiona la base (Neon, Supabase, RDS…).
-2. En `schema.sql`: `TEXT PRIMARY KEY` → `UUID PRIMARY KEY`,
-   `datetime('now')` → `NOW()`, y `TEXT` de fechas → `TIMESTAMPTZ`.
-3. En `src/lib/db/index.ts`: cambia el cliente por un `Pool` de `pg`.
-4. Las consultas usan `?`; en `pg` son `$1, $2…`.
-5. `better-sqlite3` es **síncrono** y `pg` es asíncrono: hay que volver
-   `async` las funciones de `src/lib/drivers.ts` y `src/lib/auth.ts`, y
-   añadir `await` donde se llaman.
-
-El paso 5 es el de más trabajo. Si el destino es Postgres a corto plazo,
-conviene hacerlo antes de que crezca el código.
+- Cada instancia abre un pool de hasta 5 conexiones. El hosting compartido
+  limita las conexiones por usuario; si aparece `ER_TOO_MANY_USER_CONNECTIONS`,
+  baja `connectionLimit` en `src/lib/db/index.ts`.
 
 ## Pendientes para producción
 
 Los datos son estáticos y el viaje es una simulación. Para llevarlo a real
 faltaría: geolocalización y autocompletado de direcciones, ruteo real por
-calles (OSRM o similar) con tráfico en vivo, pagos, seguimiento por websocket
-y migrar a Postgres remoto.
+calles (OSRM o similar) con tráfico en vivo, pagos, seguimiento por websocket.
 
 Sobre la flota, falta: verificación de documentos (licencia, tarjetón
 SEMOVI), roles de administrador frente a operador, límite de intentos de

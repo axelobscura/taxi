@@ -15,7 +15,7 @@ export async function PATCH(req: Request, { params }: Ctx) {
     return NextResponse.json({ error: "Estado inválido" }, { status: 422 });
   }
 
-  setDriverStatus(id, status);
+  await setDriverStatus(id, status);
   return NextResponse.json({ ok: true });
 }
 
@@ -24,6 +24,6 @@ export async function DELETE(_req: Request, { params }: Ctx) {
   if (!user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
   const { id } = await params;
-  deleteDriver(id);
+  await deleteDriver(id);
   return NextResponse.json({ ok: true });
 }

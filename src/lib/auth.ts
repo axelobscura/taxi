@@ -1,6 +1,6 @@
 import { randomBytes, randomUUID, scryptSync, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
-import { db } from "@/lib/db";
+import { execute, queryOne } from "@/lib/db";
 import "server-only";
 
 const SESSION_COOKIE = "taximex_session";
@@ -29,20 +29,27 @@ export function verifyPassword(password: string, stored: string): boolean {
   return expected.length === actual.length && timingSafeEqual(expected, actual);
 }
 
-export function createUser(email: string, name: string, password: string): User {
+export async function createUser(
+  email: string,
+  name: string,
+  password: string,
+): Promise<User> {
   const id = randomUUID();
-  db.prepare(
+  await execute(
     `INSERT INTO users (id, email, name, password_hash) VALUES (?, ?, ?, ?)`,
-  ).run(id, email.toLowerCase().trim(), name.trim(), hashPassword(password));
+    [id, email.toLowerCase().trim(), name.trim(), hashPassword(password)],
+  );
   return { id, email: email.toLowerCase().trim(), name: name.trim(), role: "operator" };
 }
 
 export function findUserByEmail(email: string) {
-  return db
-    .prepare(`SELECT * FROM users WHERE email = ?`)
-    .get(email.toLowerCase().trim()) as
-    | { id: string; email: string; name: string; password_hash: string; role: string }
-    | undefined;
+  return queryOne<{
+    id: string;
+    email: string;
+    name: string;
+    password_hash: string;
+    role: string;
+  }>(`SELECT * FROM users WHERE email = ?`, [email.toLowerCase().trim()]);
 }
 
 /** Issues a session row and sets the cookie. */
@@ -50,9 +57,10 @@ export async function startSession(userId: string) {
   const id = randomBytes(32).toString("hex");
   const expires = new Date(Date.now() + SESSION_DAYS * 864e5);
 
-  db.prepare(
+  await execute(
     `INSERT INTO sessions (id, user_id, expires_at) VALUES (?, ?, ?)`,
-  ).run(id, userId, expires.toISOString());
+    [id, userId, expires],
+  );
 
   const jar = await cookies();
   jar.set(SESSION_COOKIE, id, {
@@ -68,7 +76,7 @@ export async function endSession() {
   const jar = await cookies();
   const id = jar.get(SESSION_COOKIE)?.value;
   if (id) {
-    db.prepare(`DELETE FROM sessions WHERE id = ?`).run(id);
+    await execute(`DELETE FROM sessions WHERE id = ?`, [id]);
     jar.delete(SESSION_COOKIE);
   }
 }
@@ -79,19 +87,20 @@ export async function currentUser(): Promise<User | null> {
   const id = jar.get(SESSION_COOKIE)?.value;
   if (!id) return null;
 
-  const row = db
-    .prepare(
-      `SELECT u.id, u.email, u.name, u.role, s.expires_at
-         FROM sessions s
-         JOIN users u ON u.id = s.user_id
-        WHERE s.id = ?`,
-    )
-    .get(id) as (User & { expires_at: string }) | undefined;
+  // Compare in SQL: both sides are UTC there.
+  const row = await queryOne<User & { expired: number }>(
+    `SELECT u.id, u.email, u.name, u.role,
+            s.expires_at < UTC_TIMESTAMP() AS expired
+       FROM sessions s
+       JOIN users u ON u.id = s.user_id
+      WHERE s.id = ?`,
+    [id],
+  );
 
   if (!row) return null;
 
-  if (new Date(row.expires_at) < new Date()) {
-    db.prepare(`DELETE FROM sessions WHERE id = ?`).run(id);
+  if (row.expired) {
+    await execute(`DELETE FROM sessions WHERE id = ?`, [id]);
     return null;
   }
 

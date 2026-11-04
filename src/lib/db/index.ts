@@ -1,72 +1,96 @@
-import Database from "better-sqlite3";
-import { mkdirSync, readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import mysql from "mysql2/promise";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import "server-only";
 
 /**
- * SQLite connection, created once per process.
+ * MySQL / MariaDB connection pool, configured from DB_* env vars.
  *
- * Next.js hot-reloads modules in development, so the instance is cached on
- * `globalThis` to avoid opening a new handle on every reload.
+ * Next.js hot-reloads modules in development, so the pool is cached on
+ * `globalThis` to avoid opening new connections on every reload. The pool is
+ * created on first use, not on import, so `next build` does not need the
+ * database.
  */
 declare global {
-  var __rosaDb: Database.Database | undefined;
+  var __taxiPool: mysql.Pool | undefined;
+  var __taxiSchema: Promise<void> | undefined;
 }
 
-/**
- * Where the database file lives.
- *
- * On a serverless host the project directory is read-only and `/tmp` is the
- * only writable path, so the file goes there. That storage is per-instance and
- * wiped on cold start: see the deployment note in the README before relying on
- * anything surviving a request.
- */
-function databaseFile(): string {
-  if (process.env.DATABASE_FILE) return process.env.DATABASE_FILE;
-  if (process.env.VERCEL) return "/tmp/rosa.db";
-  return join(process.cwd(), "data", "rosa.db");
-}
-
-function connect(): Database.Database {
-  const file = databaseFile();
-
-  // better-sqlite3 creates the file but not its parent directory.
-  mkdirSync(dirname(file), { recursive: true });
-
-  const db = new Database(file);
-
-  // WAL allows concurrent reads while a write is in flight.
-  db.pragma("journal_mode = WAL");
-  db.pragma("foreign_keys = ON");
-
-  const schema = readFileSync(
-    join(process.cwd(), "src", "lib", "db", "schema.sql"),
-    "utf8",
-  );
-  db.exec(schema);
-
-  return db;
-}
-
-let instance: Database.Database | undefined;
-
-function getDb(): Database.Database {
-  if (!instance) {
-    instance = globalThis.__rosaDb ?? connect();
-    if (process.env.NODE_ENV !== "production") globalThis.__rosaDb = instance;
+function createPool(): mysql.Pool {
+  const { DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME } = process.env;
+  if (!DB_HOST || !DB_USER || !DB_NAME) {
+    throw new Error("Database is not configured: set DB_HOST, DB_USER, DB_PASSWORD and DB_NAME");
   }
-  return instance;
+
+  const pool = mysql.createPool({
+    host: DB_HOST,
+    port: Number(DB_PORT ?? 3306),
+    user: DB_USER,
+    password: DB_PASSWORD,
+    database: DB_NAME,
+    // Shared hosting caps connections per user; serverless instances each
+    // get their own pool, so keep this small.
+    connectionLimit: 5,
+    waitForConnections: true,
+    // Store and read every DATETIME as UTC, returned as plain strings.
+    timezone: "Z",
+    dateStrings: true,
+    charset: "utf8mb4",
+  });
+
+  pool.on("connection", (conn) => {
+    conn.query("SET time_zone = '+00:00'");
+    // The host runs in non-strict mode, which silently truncates oversized
+    // values. Make bad writes fail loudly instead.
+    conn.query(
+      "SET SESSION sql_mode = 'STRICT_ALL_TABLES,NO_ZERO_DATE,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'",
+    );
+  });
+
+  return pool;
 }
 
-/**
- * Connects on first use rather than on import. `next build` evaluates every
- * route module to collect its config, and connecting at module scope made the
- * build itself depend on a writable filesystem.
- */
-export const db = new Proxy({} as Database.Database, {
-  get(_target, prop) {
-    const real = getDb();
-    const value = Reflect.get(real, prop, real);
-    return typeof value === "function" ? value.bind(real) : value;
-  },
-});
+function getPool(): mysql.Pool {
+  globalThis.__taxiPool ??= createPool();
+  return globalThis.__taxiPool;
+}
+
+/** Creates any missing tables, once per process. */
+function ensureSchema(): Promise<void> {
+  globalThis.__taxiSchema ??= (async () => {
+    const schema = readFileSync(
+      join(process.cwd(), "src", "lib", "db", "schema.sql"),
+      "utf8",
+    );
+    const statements = schema
+      .split(/^\s*;\s*$/m)
+      .map((s) => s.replace(/^\s*--.*$/gm, "").trim())
+      .filter(Boolean);
+    for (const sql of statements) await getPool().query(sql);
+  })().catch((err) => {
+    // Let the next request retry instead of caching the failure.
+    globalThis.__taxiSchema = undefined;
+    throw err;
+  });
+  return globalThis.__taxiSchema;
+}
+
+type Param = string | number | null | Date;
+
+/** Runs a SELECT and returns its rows. */
+export async function query<T>(sql: string, params: Param[] = []): Promise<T[]> {
+  await ensureSchema();
+  const [rows] = await getPool().execute(sql, params);
+  return rows as T[];
+}
+
+/** Runs a SELECT and returns the first row, or undefined. */
+export async function queryOne<T>(sql: string, params: Param[] = []): Promise<T | undefined> {
+  return (await query<T>(sql, params))[0];
+}
+
+/** Runs an INSERT / UPDATE / DELETE. */
+export async function execute(sql: string, params: Param[] = []): Promise<void> {
+  await ensureSchema();
+  await getPool().execute(sql, params);
+}

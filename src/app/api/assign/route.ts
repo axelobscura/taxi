@@ -18,7 +18,7 @@ export async function POST(req: Request) {
 
   const near =
     typeof lat === "number" && typeof lng === "number" ? { lat, lng } : undefined;
-  const driver = assignDriver(tier, near);
+  const driver = await assignDriver(tier, near);
 
   if (!driver) {
     return NextResponse.json(
