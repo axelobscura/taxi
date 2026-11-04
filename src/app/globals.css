@@ -225,15 +225,17 @@
   box-shadow: 0 0 0 5px color-mix(in oklab, var(--color-gold) 25%, transparent);
 }
 
-/* Hero taxi: drives in from the left, then idles with a slight engine
-   bounce while the wheels keep turning. Disabled for users who prefer reduced motion. */
+/* Hero taxi: drives in from the left with the wheels rolling, then parks
+   and idles with a slight engine bounce. The wheel roll uses the same
+   duration and easing as the drive-in so they slow down together.
+   Disabled for users who prefer reduced motion. */
 @keyframes taxi-drive-in {
   from { transform: translateX(-110vw); }
   to { transform: translateX(0); }
 }
-@keyframes taxi-wheel-spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+@keyframes taxi-wheel-roll {
+  from { transform: rotate(-1440deg); }
+  to { transform: rotate(0deg); }
 }
 @keyframes taxi-idle {
   0%, 100% { transform: translateY(0); }
@@ -246,7 +248,7 @@
 .taxi-wheel {
   transform-box: fill-box;
   transform-origin: center;
-  animation: taxi-wheel-spin 0.8s linear infinite;
+  animation: taxi-wheel-roll 1.6s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 .taxi-body {
   animation: taxi-idle 0.9s ease-in-out 1.6s infinite;

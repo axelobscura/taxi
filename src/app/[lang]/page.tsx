@@ -158,7 +158,9 @@ export default async function Home() {
       {/* Yellow band: pitch on the left, the live booking card on the right. */}
       <section id="pedir" className="scroll-mt-4 bg-taxi px-5 pb-16 pt-10 text-coal sm:pt-14">
         <div className="mx-auto grid w-full max-w-6xl items-start gap-10 lg:grid-cols-[1fr_440px]">
-          <div className="lg:pt-6">
+          {/* min-w-0: lets the grid column shrink, so long trip names truncate
+              instead of widening the page on phones. */}
+          <div className="min-w-0 lg:pt-6">
             <p className="text-xs font-extrabold uppercase tracking-[0.2em]">
               {c.kicker}
             </p>
