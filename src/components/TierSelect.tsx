@@ -1,6 +1,8 @@
 "use client";
 
 import { TIERS, type TierId, fareFor, mxn } from "@/lib/data";
+import { useI18n } from "@/i18n/client";
+import { fmt } from "@/i18n/dictionaries";
 
 type Props = {
   selected: TierId;
@@ -20,6 +22,7 @@ const ACCENT: Record<
 };
 
 export default function TierSelect({ selected, onSelect, km, min }: Props) {
+  const { dict } = useI18n();
   return (
     <div className="space-y-2">
       {TIERS.map((tier) => {
@@ -53,7 +56,7 @@ export default function TierSelect({ selected, onSelect, km, min }: Props) {
                 </span>
               </span>
               <span className="mt-0.5 block truncate text-xs text-muted">
-                {tier.tagline}
+                {dict.tiers[tier.id]}
               </span>
             </span>
 
@@ -62,7 +65,7 @@ export default function TierSelect({ selected, onSelect, km, min }: Props) {
                 {mxn(fareFor(tier, km, min))}
               </span>
               <span className="block text-[10px] uppercase tracking-wider text-muted">
-                {tier.seats} plazas
+                {fmt(dict.booking.seats, { n: tier.seats })}
               </span>
             </span>
           </button>

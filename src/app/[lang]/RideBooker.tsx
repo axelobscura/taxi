@@ -6,6 +6,8 @@ import PlacePicker from "@/components/PlacePicker";
 import TierSelect from "@/components/TierSelect";
 import DriverCard from "@/components/DriverCard";
 import { track } from "@/lib/analytics";
+import { useI18n } from "@/i18n/client";
+import { fmt, placeLabel } from "@/i18n/dictionaries";
 // Leaflet touches `window` on import, so it must never render on the server.
 const CityMap = dynamic(() => import("@/components/CityMap"), {
   ssr: false,
@@ -27,6 +29,8 @@ import {
 type Stage = "search" | "confirm" | "riding";
 
 export default function RideBooker() {
+  const { dict } = useI18n();
+  const t = dict.booking;
   const [origin, setOrigin] = useState<Place | null>(PLACES[1]);
   const [destination, setDestination] = useState<Place | null>(null);
   const [tierId, setTierId] = useState<TierId>("rosa");
@@ -84,7 +88,8 @@ export default function RideBooker() {
       });
       const body = await res.json();
       if (!res.ok) {
-        setAssignError(body.error ?? "No se pudo asignar un conductor");
+        // 404 means no free driver in that tier; anything else is generic.
+        setAssignError(res.status === 404 ? t.noDrivers : t.assignFailed);
         track("ride_assign_failed", { tier: tierId, status: res.status });
         return;
       }
@@ -92,7 +97,7 @@ export default function RideBooker() {
       setDriver(body.driver);
       setStage("riding");
     } catch {
-      setAssignError("Error de conexión. Intenta de nuevo.");
+      setAssignError(t.networkError);
       track("ride_assign_failed", { tier: tierId, status: "network" });
     } finally {
       setAssigning(false);
@@ -111,7 +116,7 @@ export default function RideBooker() {
     <div className="theme-light card-shadow overflow-hidden rounded-lg">
       <div className="bg-coal px-5 py-4">
         <h2 className="font-display text-xl font-black uppercase text-snow">
-          Pide un <span className="text-taxi">taxi</span>
+          {t.title} <span className="text-taxi">{t.titleAccent}</span>
         </h2>
       </div>
 
@@ -139,7 +144,7 @@ export default function RideBooker() {
                 onClick={viewOptions}
                 className="w-full rounded-md bg-coal py-4 font-display text-sm font-extrabold uppercase tracking-widest text-snow transition hover:bg-coal/85 active:scale-[0.98]"
               >
-                Ver opciones · {trip.min} min
+                {fmt(t.viewOptions, { min: trip.min })}
               </button>
             )}
           </>
@@ -154,7 +159,7 @@ export default function RideBooker() {
               min={trip.min}
               onBack={() => setStage("search")}
             />
-            <p className="eyebrow px-1 pt-1">Elige tu servicio</p>
+            <p className="eyebrow px-1 pt-1">{t.chooseService}</p>
             <TierSelect
               selected={tierId}
               onSelect={selectTier}
@@ -168,8 +173,8 @@ export default function RideBooker() {
               className="w-full rounded-md bg-taxi py-4 font-display text-sm font-extrabold uppercase tracking-widest text-coal transition hover:bg-taxi-bright active:scale-[0.98] disabled:opacity-60"
             >
               {assigning
-                ? "Buscando conductor…"
-                : `Pedir ${tier.name} · ${mxn(trip.fare)}`}
+                ? t.searching
+                : fmt(t.request, { tier: tier.name, fare: mxn(trip.fare) })}
             </button>
             {assignError && (
               <p
@@ -208,12 +213,14 @@ function TripSummary({
   min: number;
   onBack: () => void;
 }) {
+  const { dict } = useI18n();
+  const t = dict.booking;
   return (
     <div className="glass flex items-center gap-3 border-l-2 border-taxi p-3">
       <button
         type="button"
         onClick={onBack}
-        aria-label="Volver"
+        aria-label={t.back}
         className="grid size-10 shrink-0 place-items-center border-2 border-ink-line bg-ink-raised text-muted transition hover:border-taxi hover:text-accent active:scale-90"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -222,10 +229,11 @@ function TripSummary({
       </button>
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium">
-          {origin.name} <span className="text-muted">→</span> {destination.name}
+          {placeLabel(dict, origin.name)} <span className="text-muted">→</span>{" "}
+          {placeLabel(dict, destination.name)}
         </p>
         <p className="text-xs text-muted">
-          {km.toFixed(1)} km · aprox. {min} min con tráfico
+          {fmt(t.tripMeta, { km: km.toFixed(1), min })}
         </p>
       </div>
     </div>

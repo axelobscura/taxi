@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { NAV } from "@/lib/nav";
-
-const PUBLIC_NAV = NAV.filter((item) => item.href !== "/entrar");
+import LanguageSwitch from "./LanguageSwitch";
+import { useI18n } from "@/i18n/client";
+import { stripLang } from "@/i18n/config";
+import { LOGIN_PATH, NAV } from "@/lib/nav";
 
 /**
  * Inline nav shown on wide screens so the menu items are visible up front
@@ -12,34 +13,31 @@ const PUBLIC_NAV = NAV.filter((item) => item.href !== "/entrar");
  * screens, where there isn't room for this.
  */
 export default function HeaderNav() {
-  const pathname = usePathname();
+  const { dict, path } = useI18n();
+  // Language-neutral, so it matches on both `/en/tarifas` and `/tarifas`.
+  const current = stripLang(usePathname());
   const isActive = (href: string) =>
-    href === "/" ? pathname === "/" : pathname.startsWith(href);
+    href === "/" ? current === "/" : current.startsWith(href);
 
   return (
-    <nav className="hidden items-center gap-1 lg:flex">
-      {PUBLIC_NAV.map((item) => (
+    <nav className="hidden items-center gap-0.5 lg:flex">
+      {NAV.map((href) => (
         <Link
-          key={item.href}
-          href={item.href}
-          className={`rounded-full px-4 py-2 text-[11px] font-bold uppercase tracking-widest transition ${
-            isActive(item.href)
-              ? "bg-taxi text-coal"
-              : "text-snow/80 hover:text-taxi"
+          key={href}
+          href={path(href)}
+          className={`rounded-full px-3.5 py-2 text-[11px] font-bold uppercase tracking-widest transition ${
+            isActive(href) ? "bg-taxi text-coal" : "text-snow/80 hover:text-taxi"
           }`}
         >
-          {item.label}
+          {dict.nav[href]}
         </Link>
       ))}
+      <LanguageSwitch className="ml-2" />
       <Link
-        href="/entrar"
-        className={`ml-2 rounded-full border px-4 py-2 text-[11px] font-bold uppercase tracking-widest transition ${
-          pathname === "/entrar"
-            ? "border-taxi text-taxi"
-            : "border-snow/30 text-snow hover:border-taxi hover:text-taxi"
-        }`}
+        href={LOGIN_PATH}
+        className="ml-1 rounded-full border border-snow/30 px-4 py-2 text-[11px] font-bold uppercase tracking-widest text-snow transition hover:border-taxi hover:text-taxi"
       >
-        Entrar
+        {dict.header.login}
       </Link>
     </nav>
   );

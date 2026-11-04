@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { PLACES, type Place } from "@/lib/data";
+import { useI18n } from "@/i18n/client";
+import { fmt, placeLabel } from "@/i18n/dictionaries";
 
 type Props = {
   origin: Place | null;
@@ -11,6 +13,8 @@ type Props = {
 };
 
 export default function PlacePicker({ origin, destination, onPick, onSwap }: Props) {
+  const { dict } = useI18n();
+  const t = dict.booking;
   const [active, setActive] = useState<"origin" | "destination" | null>("destination");
   const [query, setQuery] = useState("");
   const input = useRef<HTMLInputElement>(null);
@@ -37,10 +41,12 @@ export default function PlacePicker({ origin, destination, onPick, onSwap }: Pro
     return pool
       .filter(
         (p) =>
-          p.name.toLowerCase().includes(q) || p.zone.toLowerCase().includes(q),
+          p.name.toLowerCase().includes(q) ||
+          placeLabel(dict, p.name).toLowerCase().includes(q) ||
+          p.zone.toLowerCase().includes(q),
       )
       .slice(0, 6);
-  }, [query, active, origin, destination]);
+  }, [query, active, origin, destination, dict]);
 
   function choose(place: Place) {
     if (!active) return;
@@ -58,8 +64,9 @@ export default function PlacePicker({ origin, destination, onPick, onSwap }: Pro
 
         <Field
           dot={<span className="block size-2.5 rounded-full bg-jade" />}
-          label="Origen"
-          value={origin?.name}
+          label={t.origin}
+          placeholder={t.pickPoint}
+          value={origin && placeLabel(dict, origin.name)}
           zone={origin?.zone}
           isActive={active === "origin"}
           onClick={() => open("origin")}
@@ -67,8 +74,9 @@ export default function PlacePicker({ origin, destination, onPick, onSwap }: Pro
 
         <Field
           dot={<span className="block size-2.5 bg-taxi" />}
-          label="Destino"
-          value={destination?.name}
+          label={t.destination}
+          placeholder={t.pickPoint}
+          value={destination && placeLabel(dict, destination.name)}
           zone={destination?.zone}
           isActive={active === "destination"}
           onClick={() => open("destination")}
@@ -77,7 +85,7 @@ export default function PlacePicker({ origin, destination, onPick, onSwap }: Pro
         <button
           type="button"
           onClick={onSwap}
-          aria-label="Invertir origen y destino"
+          aria-label={t.swap}
           className="absolute right-3 top-1/2 grid size-10 -translate-y-1/2 place-items-center bg-taxi text-coal transition hover:bg-taxi-deep active:scale-90"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -98,9 +106,7 @@ export default function PlacePicker({ origin, destination, onPick, onSwap }: Pro
               ref={input}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder={
-                active === "origin" ? "¿Dónde te recogemos?" : "¿A dónde vas?"
-              }
+              placeholder={active === "origin" ? t.whereFrom : t.whereTo}
               className="w-full bg-transparent text-sm outline-none placeholder:text-muted"
             />
           </div>
@@ -120,7 +126,9 @@ export default function PlacePicker({ origin, destination, onPick, onSwap }: Pro
                     </svg>
                   </span>
                   <span className="min-w-0">
-                    <span className="block truncate text-sm font-medium">{p.name}</span>
+                    <span className="block truncate text-sm font-medium">
+                      {placeLabel(dict, p.name)}
+                    </span>
                     <span className="block truncate text-xs text-muted">{p.zone}</span>
                   </span>
                 </button>
@@ -128,7 +136,7 @@ export default function PlacePicker({ origin, destination, onPick, onSwap }: Pro
             ))}
             {results.length === 0 && (
               <li className="px-3 py-6 text-center text-sm text-muted">
-                Sin resultados para “{query}”
+                {fmt(t.noResults, { query })}
               </li>
             )}
           </ul>
@@ -141,6 +149,7 @@ export default function PlacePicker({ origin, destination, onPick, onSwap }: Pro
 function Field({
   dot,
   label,
+  placeholder,
   value,
   zone,
   isActive,
@@ -148,7 +157,8 @@ function Field({
 }: {
   dot: React.ReactNode;
   label: string;
-  value?: string;
+  placeholder: string;
+  value?: string | null;
   zone?: string;
   isActive: boolean;
   onClick: () => void;
@@ -169,7 +179,7 @@ function Field({
         <span
           className={`block truncate text-sm ${value ? "font-medium text-cream" : "text-muted"}`}
         >
-          {value ?? "Selecciona un punto"}
+          {value ?? placeholder}
         </span>
       </span>
       {zone && (

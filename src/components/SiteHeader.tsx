@@ -1,13 +1,17 @@
 import HeaderNav from "./HeaderNav";
+import LanguageSwitch from "./LanguageSwitch";
 import Logo from "./Logo";
 import MenuOverlay from "./MenuOverlay";
+import { localePath } from "@/i18n/config";
+import { getI18n } from "@/i18n/server";
 
 /**
  * The brand bar shared by every public page.
  * `floating` lays it transparently over the home hero instead of sitting
  * in flow on a solid bar.
  */
-export default function SiteHeader({ floating = false }: { floating?: boolean }) {
+export default async function SiteHeader({ floating = false }: { floating?: boolean }) {
+  const { lang, dict } = await getI18n();
   return (
     <header
       className={
@@ -17,9 +21,10 @@ export default function SiteHeader({ floating = false }: { floating?: boolean })
       }
     >
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-6 px-1 py-4">
-        <Logo />
+        <Logo href={localePath(lang, "/")} sub={dict.header.tagline} />
         <HeaderNav />
-        <div className="lg:hidden">
+        <div className="flex items-center gap-2 lg:hidden">
+          <LanguageSwitch />
           <MenuOverlay />
         </div>
       </div>

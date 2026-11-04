@@ -1,16 +1,17 @@
-/** Public pages reachable from the main menu. */
+/**
+ * Public pages in the main menu, as language-neutral paths. Labels come from
+ * the `nav` section of the dictionary, keyed by these paths.
+ */
 export const NAV = [
-  { href: "/", label: "Pedir taxi" },
-  { href: "/servicios", label: "Servicios" },
-  { href: "/tarifas", label: "Tarifas" },
-  { href: "/taxi", label: "Cobertura" },
-  { href: "/nosotros", label: "Nosotros" },
-  { href: "/contacto", label: "Contacto" },
-  { href: "/entrar", label: "Entrar" },
+  "/",
+  "/servicios",
+  "/tarifas",
+  "/taxi",
+  "/nosotros",
+  "/contacto",
 ] as const;
 
-/**
- * Routes shown in the footer. `/entrar` is an operator entry point rather
- * than a public page, so it stays out of the site footer listing.
- */
-export const FOOTER_NAV = NAV.filter((n) => n.href !== "/entrar");
+export type NavPath = (typeof NAV)[number];
+
+/** Operator login. Spanish-only, so it is never language-prefixed. */
+export const LOGIN_PATH = "/entrar";

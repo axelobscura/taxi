@@ -1,5 +1,5 @@
-import Link from "next/link";
 import PageShell from "@/components/PageShell";
+import { OrderCta } from "@/components/Landing";
 import {
   PLACES,
   TIERS,
@@ -10,12 +10,61 @@ import {
   mxnRate,
 } from "@/lib/data";
 import { pageMetadata } from "@/lib/site";
+import type { Lang } from "@/i18n/config";
+import { placeLabel } from "@/i18n/dictionaries";
+import { getI18n, getLang } from "@/i18n/server";
 
-export const metadata = pageMetadata(
-  "/tarifas",
-  "Tarifas de taxi en CDMX: banderazo y precio por km",
-  "Cuánto cuesta un taxi en la CDMX: banderazo, costo por kilómetro y por minuto, y precios de rutas reales como Ángel–Aeropuerto o Polanco–Santa Fe.",
-);
+const COPY = {
+  es: {
+    title: "Tarifas de taxi en CDMX: banderazo y precio por km",
+    description:
+      "Cuánto cuesta un taxi en la CDMX: banderazo, costo por kilómetro y por minuto, y precios de rutas reales como Ángel–Aeropuerto o Polanco–Santa Fe.",
+    eyebrow: "Precios claros",
+    h1a: "Tarifa cerrada,",
+    h1b: "sin sorpresas",
+    lead: "Ves el precio antes de confirmar y ese es el que pagas. No cobramos por tráfico imprevisto ni aplicamos tarifa dinámica.",
+    howTitle: "Cómo se calcula",
+    how: [
+      { title: "Banderazo", body: "Cargo fijo al iniciar el viaje. Cambia según la categoría." },
+      { title: "Por kilómetro", body: "Distancia estimada de la ruta entre origen y destino." },
+      { title: "Por minuto", body: "Tiempo estimado con el tráfico promedio de la ciudad (18 km/h)." },
+    ],
+    compareTitle: "Comparativa por categoría",
+    cols: ["Categoría", "Banderazo", "Por km", "Por min", "Plazas"],
+    routesTitle: "Rutas de ejemplo",
+    routesLead: "Precios estimados en categoría Rosa, calculados con la misma fórmula que usa la app.",
+    disclaimer:
+      "Las distancias son estimadas en línea directa con un factor de rodeo; la tarifa final puede variar si el trayecto real cambia. Las casetas de la autopista no están incluidas.",
+    cta: "Calcula tu viaje",
+  },
+  en: {
+    title: "Mexico City Taxi Fares: Base Fare and Price per km",
+    description:
+      "How much a taxi costs in Mexico City: base fare, price per kilometer and per minute, and prices for real routes like Ángel–Airport or Polanco–Santa Fe.",
+    eyebrow: "Clear prices",
+    h1a: "Fixed fare,",
+    h1b: "no surprises",
+    lead: "You see the price before you confirm, and that's what you pay. We don't charge for unexpected traffic or use surge pricing.",
+    howTitle: "How it's calculated",
+    how: [
+      { title: "Base fare", body: "A fixed charge when the trip starts. It depends on the ride type." },
+      { title: "Per kilometer", body: "Estimated distance of the route from pickup to drop-off." },
+      { title: "Per minute", body: "Estimated time with the city's average traffic (18 km/h)." },
+    ],
+    compareTitle: "Ride types compared",
+    cols: ["Ride type", "Base fare", "Per km", "Per min", "Seats"],
+    routesTitle: "Sample routes",
+    routesLead: "Estimated Rosa prices, calculated with the same formula the app uses.",
+    disclaimer:
+      "Distances are estimated as a straight line with a detour factor; the final fare may vary if the actual route changes. Highway tolls are not included.",
+    cta: "Price your trip",
+  },
+} satisfies Record<Lang, unknown>;
+
+export async function generateMetadata() {
+  const lang = await getLang();
+  return pageMetadata(lang, "/tarifas", COPY[lang].title, COPY[lang].description);
+}
 
 const place = (name: string) => PLACES.find((p) => p.name === name)!;
 
@@ -28,49 +77,39 @@ const ROUTES = [
   ["Terminal Norte", "Bosque de Chapultepec"],
 ] as const;
 
-export default function TarifasPage() {
+export default async function TarifasPage() {
+  const { lang, dict } = await getI18n();
+  const c = COPY[lang];
   return (
     <PageShell
-      eyebrow="Precios claros"
-      title={<>Tarifa cerrada,<br />sin sorpresas</>}
-      lead="Ves el precio antes de confirmar y ese es el que pagas. No cobramos por tráfico imprevisto ni aplicamos tarifa dinámica."
+      eyebrow={c.eyebrow}
+      title={<>{c.h1a}<br />{c.h1b}</>}
+      lead={c.lead}
     >
       <section>
         <h2 className="font-display text-2xl font-extrabold uppercase">
-          Cómo se calcula
+          {c.howTitle}
         </h2>
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
-          <Formula
-            n="01"
-            title="Banderazo"
-            body="Cargo fijo al iniciar el viaje. Cambia según la categoría."
-          />
-          <Formula
-            n="02"
-            title="Por kilómetro"
-            body="Distancia estimada de la ruta entre origen y destino."
-          />
-          <Formula
-            n="03"
-            title="Por minuto"
-            body="Tiempo estimado con el tráfico promedio de la ciudad (18 km/h)."
-          />
+          {c.how.map((f, i) => (
+            <Formula key={f.title} n={`0${i + 1}`} title={f.title} body={f.body} />
+          ))}
         </div>
       </section>
 
       <section className="mt-12">
         <h2 className="font-display text-2xl font-extrabold uppercase">
-          Comparativa por categoría
+          {c.compareTitle}
         </h2>
         <div className="mt-4 overflow-x-auto">
           <table className="w-full min-w-[520px] border-collapse text-sm">
             <thead>
               <tr className="border-b-2 border-taxi text-left">
-                <Th>Categoría</Th>
-                <Th align="right">Banderazo</Th>
-                <Th align="right">Por km</Th>
-                <Th align="right">Por min</Th>
-                <Th align="right">Plazas</Th>
+                {c.cols.map((col, i) => (
+                  <Th key={col} align={i === 0 ? "left" : "right"}>
+                    {col}
+                  </Th>
+                ))}
               </tr>
             </thead>
             <tbody>
@@ -94,12 +133,9 @@ export default function TarifasPage() {
 
       <section className="mt-12">
         <h2 className="font-display text-2xl font-extrabold uppercase">
-          Rutas de ejemplo
+          {c.routesTitle}
         </h2>
-        <p className="mt-1 text-sm text-muted">
-          Precios estimados en categoría Rosa, calculados con la misma fórmula
-          que usa la app.
-        </p>
+        <p className="mt-1 text-sm text-muted">{c.routesLead}</p>
 
         <ul className="mt-4 space-y-2">
           {ROUTES.map(([from, to]) => {
@@ -112,7 +148,8 @@ export default function TarifasPage() {
                 className="flex flex-wrap items-center gap-x-4 gap-y-1 border-l-2 border-taxi bg-ink-soft p-4"
               >
                 <span className="min-w-0 flex-1 text-sm">
-                  {from} <span className="text-muted">→</span> {to}
+                  {placeLabel(dict, from)} <span className="text-muted">→</span>{" "}
+                  {placeLabel(dict, to)}
                 </span>
                 <span className="text-xs text-muted">
                   {km.toFixed(1)} km · {min} min
@@ -126,23 +163,11 @@ export default function TarifasPage() {
         </ul>
 
         <p className="mt-4 text-xs leading-relaxed text-muted">
-          Las distancias son estimadas en línea directa con un factor de rodeo;
-          la tarifa final puede variar si el trayecto real cambia. Las casetas
-          de la autopista no están incluidas.
+          {c.disclaimer}
         </p>
       </section>
 
-      <div className="mt-10 flex flex-col items-start gap-4 border-l-2 border-taxi bg-ink-soft p-6 sm:flex-row sm:items-center sm:justify-between">
-        <p className="font-display text-xl font-extrabold uppercase">
-          Calcula tu viaje
-        </p>
-        <Link
-          href="/"
-          className="shrink-0 bg-taxi px-8 py-3.5 font-display text-sm font-extrabold uppercase tracking-widest text-coal transition active:scale-[0.98]"
-        >
-          <span className="block">Ver mi tarifa</span>
-        </Link>
-      </div>
+      <OrderCta title={c.cta} />
     </PageShell>
   );
 }

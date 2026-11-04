@@ -1,3 +1,5 @@
+import type { Lang } from "@/i18n/config";
+import { CITIES_EN } from "./cities.en";
 import { PLACES, type Place } from "./data";
 
 /**
@@ -383,3 +385,35 @@ export function placeNamed(name: string): Place {
   if (!place) throw new Error(`Unknown place in cities.ts: ${name}`);
   return place;
 }
+
+/**
+ * The city with its copy in `lang`. Spanish is the source; other languages
+ * overlay translated copy from `cities.<lang>.ts` and keep everything else
+ * (slugs, places, fare routes) from the source.
+ */
+export function localizeCity(city: City, lang: Lang): City {
+  if (lang === "es") return city;
+  const copy = CITIES_EN[city.slug];
+  if (!copy) throw new Error(`Missing English copy for city "${city.slug}"`);
+
+  const faqs = (source: Faq[], translated: { q: string; a: string }[], where: string) => {
+    if (source.length !== translated.length) {
+      throw new Error(`FAQ count mismatch in English copy for ${where}`);
+    }
+    return source.map((f, i) => ({ ...f, ...translated[i] }));
+  };
+
+  return {
+    ...city,
+    name: copy.name,
+    intro: copy.intro,
+    faqs: faqs(city.faqs, copy.faqs, city.slug),
+    zones: city.zones.map((z) => {
+      const zc = copy.zones[z.slug];
+      if (!zc) throw new Error(`Missing English copy for zone "${z.slug}"`);
+      return { ...z, ...zc, faqs: faqs(z.faqs, zc.faqs, z.slug) };
+    }),
+  };
+}
+
+export const citiesIn = (lang: Lang) => CITIES.map((c) => localizeCity(c, lang));

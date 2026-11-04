@@ -2,41 +2,48 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import PageShell from "@/components/PageShell";
 import { JsonLd, OrderCta, breadcrumbJsonLd } from "@/components/Landing";
-import { CITIES } from "@/lib/cities";
+import { citiesIn } from "@/lib/cities";
 import { pageMetadata } from "@/lib/site";
+import { localePath } from "@/i18n/config";
+import { fmt } from "@/i18n/dictionaries";
+import { getLang } from "@/i18n/server";
+import { TAXI_COPY } from "./copy";
 
-export const metadata: Metadata = pageMetadata(
-  "/taxi",
-  "Taxi en México: ciudades y zonas con servicio",
-  "Consulta dónde opera TAXI-MEX: taxis seguros con tarifa cerrada en la Ciudad de México, el aeropuerto AICM y las centrales de autobuses.",
-);
+export async function generateMetadata(): Promise<Metadata> {
+  const lang = await getLang();
+  const c = TAXI_COPY[lang];
+  return pageMetadata(lang, "/taxi", c.indexTitle, c.indexDescription);
+}
 
-const CRUMBS = [
-  { href: "/", label: "Inicio" },
-  { href: "/taxi", label: "Cobertura" },
-];
+export default async function CoberturaPage() {
+  const lang = await getLang();
+  const c = TAXI_COPY[lang];
+  const path = (p: string) => localePath(lang, p);
+  const crumbs = [
+    { href: path("/"), label: c.home },
+    { href: path("/taxi"), label: c.coverage },
+  ];
 
-export default function CoberturaPage() {
   return (
     <PageShell
-      crumbs={CRUMBS}
-      eyebrow="Cobertura"
-      title={<>Taxi seguro<br />en México</>}
-      lead="Estas son las ciudades y zonas donde puedes pedir un taxi con nosotros. Seguimos creciendo: cada ciudad nueva aparecerá aquí en cuanto el servicio esté activo."
+      crumbs={crumbs}
+      eyebrow={c.coverage}
+      title={<>{c.indexH1a}<br />{c.indexH1b}</>}
+      lead={c.indexLead}
     >
       <JsonLd
-        data={{ "@context": "https://schema.org", ...breadcrumbJsonLd(CRUMBS) }}
+        data={{ "@context": "https://schema.org", ...breadcrumbJsonLd(crumbs) }}
       />
 
       <div className="space-y-10">
-        {CITIES.map((city) => (
+        {citiesIn(lang).map((city) => (
           <section key={city.slug}>
             <h2 className="font-display text-2xl font-extrabold uppercase">
               <Link
-                href={`/taxi/${city.slug}`}
+                href={path(`/taxi/${city.slug}`)}
                 className="transition hover:text-accent"
               >
-                Taxi en {city.name}
+                {fmt(c.taxiIn, { place: city.name })}
               </Link>
             </h2>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">
@@ -46,11 +53,11 @@ export default function CoberturaPage() {
               {city.zones.map((z) => (
                 <li key={z.slug}>
                   <Link
-                    href={`/taxi/${city.slug}/${z.slug}`}
+                    href={path(`/taxi/${city.slug}/${z.slug}`)}
                     className="block border-l-2 border-taxi bg-ink-soft p-4 transition hover:bg-ink-raised"
                   >
                     <span className="font-display text-base font-extrabold">
-                      Taxi en {z.name}
+                      {fmt(c.taxiIn, { place: z.name })}
                     </span>
                     <span className="mt-0.5 block text-xs text-muted">
                       {z.tagline}
@@ -63,7 +70,7 @@ export default function CoberturaPage() {
         ))}
       </div>
 
-      <OrderCta title="Pide tu taxi ahora" />
+      <OrderCta title={c.orderNow} />
     </PageShell>
   );
 }

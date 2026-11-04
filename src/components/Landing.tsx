@@ -2,26 +2,38 @@ import Link from "next/link";
 import { TIERS, distanceKm, durationMin, fareFor, mxn } from "@/lib/data";
 import { placeNamed, type City, type Faq } from "@/lib/cities";
 import { ORG_ID, absoluteUrl, jsonLd } from "@/lib/site";
+import { localePath, type Lang } from "@/i18n/config";
+import { getDict, placeLabel, type Dict } from "@/i18n/dictionaries";
+import { getI18n } from "@/i18n/server";
 
 /** Building blocks shared by the `/taxi` coverage landing pages. */
 
+/** `href` is the public URL, already language-prefixed. */
 export type Crumb = { href: string; label: string };
 
 const ROSA = TIERS.find((t) => t.id === "rosa")!;
 
+/** `from` and `to` are PLACES keys (Spanish names), not display labels. */
 export function rosaFare(from: string, to: string) {
   const km = distanceKm(placeNamed(from), placeNamed(to));
   const min = durationMin(km);
   return { km, min, fare: fareFor(ROSA, km, min) };
 }
 
+const FARE_SENTENCE = {
+  es: "De {from} a {to}, en categoría Rosa, cuesta alrededor de {fare}.",
+  en: "From {from} to {to}, a Rosa ride costs about {fare}.",
+} as const;
+
 /** The FAQ answer as shown, with the live fare prepended for price questions. */
-function answerOf(faq: Faq): string {
+function answerOf(faq: Faq, lang: Lang, dict: Dict): string {
   if (!faq.fare) return faq.a;
   const [from, to] = faq.fare;
-  return `De ${from} a ${to}, en categoría Rosa, cuesta alrededor de ${mxn(
-    rosaFare(from, to).fare,
-  )}. ${faq.a}`;
+  const lead = FARE_SENTENCE[lang]
+    .replace("{from}", placeLabel(dict, from))
+    .replace("{to}", placeLabel(dict, to))
+    .replace("{fare}", mxn(rosaFare(from, to).fare));
+  return `${lead} ${faq.a}`;
 }
 
 export function JsonLd({ data }: { data: object }) {
@@ -45,42 +57,50 @@ export function breadcrumbJsonLd(crumbs: Crumb[]) {
   };
 }
 
-export function faqJsonLd(faqs: Faq[]) {
+export function faqJsonLd(faqs: Faq[], lang: Lang) {
+  const dict = getDict(lang);
   return {
     "@type": "FAQPage",
     mainEntity: faqs.map((f) => ({
       "@type": "Question",
       name: f.q,
-      acceptedAnswer: { "@type": "Answer", text: answerOf(f) },
+      acceptedAnswer: { "@type": "Answer", text: answerOf(f, lang, dict) },
     })),
   };
 }
 
-/** A TaxiService offered in a city, or in one zone of it. */
+/**
+ * A TaxiService offered in a city, or in one zone of it. `city` must already
+ * be localized; `path` is language-neutral.
+ */
 export function taxiServiceJsonLd(
   city: City,
+  lang: Lang,
   path: string,
   description: string,
   zone?: string,
 ) {
+  const url = localePath(lang, path);
   const cityNode = {
     "@type": "City",
     name: city.name,
-    containedInPlace: { "@type": "Country", name: "México" },
+    containedInPlace: { "@type": "Country", name: lang === "es" ? "México" : "Mexico" },
   };
+  const taxiIn = lang === "es" ? "Taxi en" : "Taxi in";
   return {
     "@type": "TaxiService",
-    "@id": absoluteUrl(`${path}#service`),
-    name: zone ? `Taxi en ${zone}, ${city.shortName}` : `Taxi en ${city.name}`,
+    "@id": absoluteUrl(`${url}#service`),
+    name: zone ? `${taxiIn} ${zone}, ${city.shortName}` : `${taxiIn} ${city.name}`,
     description,
-    url: absoluteUrl(path),
+    url: absoluteUrl(url),
+    inLanguage: lang,
     provider: { "@id": ORG_ID },
     areaServed: zone
       ? { "@type": "Place", name: zone, containedInPlace: cityNode }
       : cityNode,
     availableChannel: {
       "@type": "ServiceChannel",
-      serviceUrl: absoluteUrl("/"),
+      serviceUrl: absoluteUrl(localePath(lang, "/")),
     },
     hoursAvailable: {
       "@type": "OpeningHoursSpecification",
@@ -90,9 +110,10 @@ export function taxiServiceJsonLd(
   };
 }
 
-export function Breadcrumbs({ crumbs }: { crumbs: Crumb[] }) {
+export async function Breadcrumbs({ crumbs }: { crumbs: Crumb[] }) {
+  const { lang } = await getI18n();
   return (
-    <nav aria-label="Ruta de navegación" className="mb-4">
+    <nav aria-label={lang === "es" ? "Ruta de navegación" : "Breadcrumb"} className="mb-4">
       <ol className="flex flex-wrap items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-muted">
         {crumbs.map((c, i) => (
           <li key={c.href} className="flex items-center gap-1.5">
@@ -113,7 +134,8 @@ export function Breadcrumbs({ crumbs }: { crumbs: Crumb[] }) {
   );
 }
 
-export function SampleFares({ from, to }: { from: string; to: string[] }) {
+export async function SampleFares({ from, to }: { from: string; to: string[] }) {
+  const { dict } = await getI18n();
   return (
     <ul className="mt-4 space-y-2">
       {to.map((dest) => {
@@ -124,7 +146,8 @@ export function SampleFares({ from, to }: { from: string; to: string[] }) {
             className="flex flex-wrap items-center gap-x-4 gap-y-1 border-l-2 border-taxi bg-ink-soft p-4"
           >
             <span className="min-w-0 flex-1 text-sm">
-              {from} <span className="text-muted">→</span> {dest}
+              {placeLabel(dict, from)} <span className="text-muted">→</span>{" "}
+              {placeLabel(dict, dest)}
             </span>
             <span className="text-xs text-muted">
               {km.toFixed(1)} km · {min} min
@@ -139,7 +162,8 @@ export function SampleFares({ from, to }: { from: string; to: string[] }) {
   );
 }
 
-export function FaqList({ faqs }: { faqs: Faq[] }) {
+export async function FaqList({ faqs }: { faqs: Faq[] }) {
+  const { lang, dict } = await getI18n();
   return (
     <div className="mt-4 space-y-2">
       {faqs.map((f) => (
@@ -154,7 +178,7 @@ export function FaqList({ faqs }: { faqs: Faq[] }) {
             </span>
           </summary>
           <p className="mt-3 text-sm leading-relaxed text-muted">
-            {answerOf(f)}
+            {answerOf(f, lang, dict)}
           </p>
         </details>
       ))}
@@ -162,20 +186,24 @@ export function FaqList({ faqs }: { faqs: Faq[] }) {
   );
 }
 
-export function OrderCta({ title }: { title: string }) {
+const CTA = {
+  es: { body: "Elige origen y destino y ve tu tarifa cerrada al instante.", button: "Pedir taxi" },
+  en: { body: "Pick your pickup and drop-off and see your fixed fare instantly.", button: "Book a taxi" },
+} as const;
+
+export async function OrderCta({ title }: { title: string }) {
+  const { lang } = await getI18n();
   return (
     <div className="mt-12 flex flex-col items-start gap-4 border-l-2 border-taxi bg-ink-soft p-6 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <p className="font-display text-xl font-extrabold uppercase">{title}</p>
-        <p className="mt-1 text-sm text-muted">
-          Elige origen y destino y ve tu tarifa cerrada al instante.
-        </p>
+        <p className="mt-1 text-sm text-muted">{CTA[lang].body}</p>
       </div>
       <Link
-        href="/"
-        className="shrink-0 bg-taxi px-8 py-3.5 font-display text-sm font-extrabold uppercase tracking-widest text-coal transition active:scale-[0.98]"
+        href={`${localePath(lang, "/")}#pedir`}
+        className="shrink-0 rounded-md bg-taxi px-8 py-3.5 font-display text-sm font-extrabold uppercase tracking-widest text-coal transition hover:bg-taxi-bright active:scale-[0.98]"
       >
-        <span className="block">Pedir taxi</span>
+        {CTA[lang].button}
       </Link>
     </div>
   );

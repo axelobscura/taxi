@@ -2,7 +2,7 @@ import Logo from "@/components/Logo";
 import { redirect } from "next/navigation";
 import { currentUser } from "@/lib/auth";
 import { listDrivers } from "@/lib/drivers";
-import { logout } from "@/app/entrar/actions";
+import { logout } from "@/app/(ops)/entrar/actions";
 import AddDriverForm from "./AddDriverForm";
 import DriverList from "./DriverList";
 

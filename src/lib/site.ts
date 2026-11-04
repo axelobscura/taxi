@@ -1,14 +1,23 @@
+import {
+  OG_LOCALE,
+  languageAlternates,
+  localePath,
+  type Lang,
+} from "@/i18n/config";
+
 /** Brand and contact details shared by metadata, structured data and pages. */
 export const SITE = {
   name: "TAXI-MEX",
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://taxi.org.mx",
-  description:
-    "Pide un taxi seguro en línea en la Ciudad de México. Tarifa cerrada antes de subir, conductores verificados ante la SEMOVI y servicio 24/7.",
-  phone: "+525500115225",
-  phoneDisplay: "55 0011-52256",
   email: "hola@taxi.org.mx",
-  locale: "es_MX",
 } as const;
+
+const DESCRIPTION: Record<Lang, string> = {
+  es: "Pide un taxi seguro en línea en la Ciudad de México. Tarifa cerrada antes de subir, conductores verificados ante la SEMOVI y servicio 24/7.",
+  en: "Book a safe taxi online in Mexico City. Fixed fare before you ride, drivers verified by SEMOVI and 24/7 service.",
+};
+
+export const siteDescription = (lang: Lang) => DESCRIPTION[lang];
 
 /** Absolute URL for a site path, for JSON-LD where relative URLs aren't allowed. */
 export const absoluteUrl = (path = "/") => new URL(path, SITE.url).toString();
@@ -24,20 +33,29 @@ export const jsonLd = (data: object) =>
   JSON.stringify(data).replace(/</g, "\\u003c");
 
 /**
- * Per-page metadata with canonical URL and Open Graph filled in. Next replaces
- * `openGraph` wholesale rather than merging it with the layout's, so the
- * shared fields (and the share image) have to be repeated on every page.
+ * Per-page metadata: canonical URL in the page's language, hreflang links to
+ * every translation, and Open Graph. Next replaces `openGraph` wholesale
+ * rather than merging it with the layout's, so the shared fields (and the
+ * share image) have to be repeated on every page.
+ *
+ * `path` is language-neutral (`/tarifas`); the language prefix is added here.
  */
-export function pageMetadata(path: string, title: string, description: string) {
+export function pageMetadata(
+  lang: Lang,
+  path: string,
+  title: string,
+  description: string,
+) {
+  const url = localePath(lang, path);
   return {
     title,
     description,
-    alternates: { canonical: path },
+    alternates: { canonical: url, languages: languageAlternates(path) },
     openGraph: {
       type: "website" as const,
-      locale: SITE.locale,
+      locale: OG_LOCALE[lang],
       siteName: SITE.name,
-      url: path,
+      url,
       title,
       description,
       // The file-based image in app/ is dropped once a page sets its own

@@ -4,14 +4,21 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { NAV } from "@/lib/nav";
+import { SITE } from "@/lib/site";
+import { useI18n } from "@/i18n/client";
+import { stripLang } from "@/i18n/config";
+import { LOGIN_PATH, NAV } from "@/lib/nav";
+
+/** Main menu entries, then the operator login set apart at the end. */
+const ITEMS = [...NAV, LOGIN_PATH] as const;
 
 /**
  * Full-screen navigation overlay, opened from the hamburger in the header.
  */
 export default function MenuOverlay() {
   const [open, setOpen] = useState(false);
-  const pathname = usePathname();
+  const { dict, path } = useI18n();
+  const current = stripLang(usePathname());
 
   // Escape closes; lock scroll while the overlay is up.
   useEffect(() => {
@@ -33,7 +40,7 @@ export default function MenuOverlay() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        aria-label="Abrir menú"
+        aria-label={dict.header.openMenu}
         aria-expanded={open}
         className="grid size-10 place-items-center rounded-md bg-taxi text-coal transition hover:bg-taxi-bright"
       >
@@ -47,15 +54,15 @@ export default function MenuOverlay() {
           <div
             role="dialog"
           aria-modal="true"
-          aria-label="Menú principal"
+          aria-label={dict.header.mainMenu}
           className="fixed inset-0 z-[1000] flex flex-col bg-ink"
         >
           <div className="flex items-center justify-between px-5 pt-5">
-            <p className="eyebrow">Menú</p>
+            <p className="eyebrow">{dict.header.menu}</p>
             <button
               type="button"
               onClick={() => setOpen(false)}
-              aria-label="Cerrar menú"
+              aria-label={dict.header.closeMenu}
               autoFocus
               className="grid size-10 place-items-center bg-taxi text-coal transition hover:bg-taxi-deep"
             >
@@ -66,14 +73,15 @@ export default function MenuOverlay() {
           </div>
 
           <nav className="flex flex-1 flex-col justify-center gap-1 px-5 pb-16">
-            {NAV.map((item, i) => {
-              const active = pathname === item.href;
-              // The operator login is not a public page; set it apart.
-              const isStaff = item.href === "/entrar";
+            {ITEMS.map((href, i) => {
+              const active = current === href;
+              // The operator login is not a public page; set it apart. It is
+              // Spanish-only, so its URL never gets a language prefix.
+              const isStaff = href === LOGIN_PATH;
               return (
                 <Link
-                  key={item.href}
-                  href={item.href}
+                  key={href}
+                  href={isStaff ? href : path(href)}
                   onClick={() => setOpen(false)}
                   className={`group flex items-baseline gap-4 py-2 ${
                     isStaff ? "mt-6 border-t border-ink-line pt-6" : ""
@@ -94,11 +102,11 @@ export default function MenuOverlay() {
                           : "text-cream group-hover:text-accent"
                     }`}
                   >
-                    {item.label}
+                    {isStaff ? dict.header.login : dict.nav[href]}
                   </span>
                   {isStaff && (
                     <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted">
-                      Panel de flota
+                      {dict.header.fleetPanel}
                     </span>
                   )}
                 </Link>
@@ -108,9 +116,9 @@ export default function MenuOverlay() {
 
             <div className="border-t border-ink-line px-5 py-5 text-xs text-muted">
               <p className="font-bold uppercase tracking-widest text-cream">
-                24/7 en toda la CDMX
+                {dict.header.coverage247}
               </p>
-              <p className="mt-1">55 0011-52256 · hola@taxi.org.mx</p>
+              <p className="mt-1">{SITE.email}</p>
             </div>
           </div>,
           document.body,

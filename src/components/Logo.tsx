@@ -2,9 +2,16 @@ import Link from "next/link";
 import CarIcon from "./CarIcon";
 
 /** Brand mark: yellow taxi tile plus wordmark. `sub` is the small line under it. */
-export default function Logo({ sub = "Pide y relájate" }: { sub?: string }) {
+export default function Logo({
+  sub = "Pide y relájate",
+  href = "/",
+}: {
+  sub?: string;
+  /** Home page in the current language. */
+  href?: string;
+}) {
   return (
-    <Link href="/" className="flex items-center gap-2.5" aria-label="TAXI-MEX, inicio">
+    <Link href={href} className="flex items-center gap-2.5" aria-label="TAXI-MEX">
       <span className="grid size-10 place-items-center rounded-md bg-taxi">
         <CarIcon size={24} />
       </span>

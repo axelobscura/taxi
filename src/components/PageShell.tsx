@@ -2,9 +2,12 @@ import Link from "next/link";
 import Logo from "./Logo";
 import SiteHeader from "./SiteHeader";
 import { Breadcrumbs, type Crumb } from "./Landing";
-import { FOOTER_NAV } from "@/lib/nav";
-import { CITIES } from "@/lib/cities";
+import { NAV } from "@/lib/nav";
+import { citiesIn } from "@/lib/cities";
 import { SITE } from "@/lib/site";
+import { localePath } from "@/i18n/config";
+import { fmt } from "@/i18n/dictionaries";
+import { getI18n } from "@/i18n/server";
 
 /** Standard layout for the public content pages. */
 export default function PageShell({
@@ -51,39 +54,38 @@ export default function PageShell({
   );
 }
 
-export function SiteFooter() {
+export async function SiteFooter() {
+  const { lang, dict } = await getI18n();
+  const t = dict.footer;
   return (
     <footer className="bg-coal px-5 py-12">
       <div className="mx-auto grid w-full max-w-6xl gap-8 sm:grid-cols-2 lg:grid-cols-4">
         <div>
-          <Logo />
-          <p className="mt-4 text-xs leading-relaxed text-muted">
-            Taxis verificados en la Ciudad de México. Tarifa cerrada antes de
-            subir, sin sorpresas.
-          </p>
+          <Logo href={localePath(lang, "/")} sub={dict.header.tagline} />
+          <p className="mt-4 text-xs leading-relaxed text-muted">{t.about}</p>
         </div>
 
         <div>
-          <p className="eyebrow mb-3">Navegación</p>
+          <p className="eyebrow mb-3">{t.navigation}</p>
           <ul className="space-y-1.5 text-sm">
-            {FOOTER_NAV.map((n) => (
-              <li key={n.href}>
-                <Link href={n.href} className="text-muted transition hover:text-accent">
-                  {n.label}
+            {NAV.map((href) => (
+              <li key={href}>
+                <Link href={localePath(lang, href)} className="text-muted transition hover:text-accent">
+                  {dict.nav[href]}
                 </Link>
               </li>
             ))}
           </ul>
         </div>
 
-        {CITIES.map((city) => (
+        {citiesIn(lang).map((city) => (
           <div key={city.slug}>
-            <p className="eyebrow mb-3">Taxi en {city.shortName}</p>
+            <p className="eyebrow mb-3">{fmt(t.taxiIn, { city: city.shortName })}</p>
             <ul className="space-y-1.5 text-sm">
               {city.zones.map((z) => (
                 <li key={z.slug}>
                   <Link
-                    href={`/taxi/${city.slug}/${z.slug}`}
+                    href={localePath(lang, `/taxi/${city.slug}/${z.slug}`)}
                     className="text-muted transition hover:text-accent"
                   >
                     {z.name}
@@ -95,26 +97,20 @@ export function SiteFooter() {
         ))}
 
         <div>
-          <p className="eyebrow mb-3">Contacto</p>
+          <p className="eyebrow mb-3">{t.contact}</p>
           <ul className="space-y-1.5 text-sm text-muted">
-            <li>
-              <a href={`tel:${SITE.phone}`} className="transition hover:text-accent">
-                {SITE.phoneDisplay}
-              </a>
-            </li>
             <li>
               <a href={`mailto:${SITE.email}`} className="transition hover:text-accent">
                 {SITE.email}
               </a>
             </li>
-            <li className="pt-1 text-xs">Servicio 24/7 en toda la CDMX</li>
+            <li className="pt-1 text-xs">{t.service}</li>
           </ul>
         </div>
       </div>
 
       <div className="mx-auto mt-10 w-full max-w-6xl border-t border-ink-line pt-5 text-[11px] text-muted">
-        © {new Date().getFullYear()} TAXI-MEX CDMX · Conductores verificados con la
-        SEMOVI
+        © {new Date().getFullYear()} {SITE.name} CDMX · {t.legal}
       </div>
     </footer>
   );

@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react";
 import type { AssignedDriver, Tier } from "@/lib/data";
 import { initialsOf, mxn } from "@/lib/data";
+import { useI18n } from "@/i18n/client";
+import { fmt } from "@/i18n/dictionaries";
+import { LOCALE_TAG } from "@/i18n/config";
 
 type Props = {
   driver: AssignedDriver;
@@ -12,6 +15,8 @@ type Props = {
 };
 
 export default function DriverCard({ driver, tier, fare, onCancel }: Props) {
+  const { lang, dict } = useI18n();
+  const t = dict.booking;
   const [secondsAway, setSecondsAway] = useState(tier.eta * 60);
 
   useEffect(() => {
@@ -32,7 +37,7 @@ export default function DriverCard({ driver, tier, fare, onCancel }: Props) {
             <span className="relative inline-flex size-2 rounded-full bg-jade" />
           </span>
           <span className="font-bold uppercase tracking-widest text-jade">
-            {arrived ? "Tu conductor llegó" : "Tu conductor va en camino"}
+            {arrived ? t.driverArrived : t.driverOnTheWay}
           </span>
           {!arrived && (
             <span className="ml-auto font-display tabular-nums text-cream">
@@ -57,12 +62,14 @@ export default function DriverCard({ driver, tier, fare, onCancel }: Props) {
                 </svg>
                 {driver.rating.toFixed(2)}
               </span>
-              <span className="text-muted">{driver.trips.toLocaleString("es-MX")} viajes</span>
+              <span className="text-muted">
+                {fmt(t.trips, { n: driver.trips.toLocaleString(LOCALE_TAG[lang]) })}
+              </span>
             </p>
           </div>
           <div className="shrink-0 border-2 border-cream/20 bg-ink px-2.5 py-1.5 text-center">
             <p className="font-display text-sm font-bold tracking-wider">{driver.plate}</p>
-            <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-muted">Placa</p>
+            <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-muted">{t.plate}</p>
           </div>
         </div>
 
@@ -74,7 +81,7 @@ export default function DriverCard({ driver, tier, fare, onCancel }: Props) {
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.2a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2Z" />
             </svg>
-            Llamar
+            {t.call}
           </a>
           <button
             type="button"
@@ -83,29 +90,28 @@ export default function DriverCard({ driver, tier, fare, onCancel }: Props) {
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.9 8.9 0 0 1-4-.9L3 20l1.1-4.6a8.4 8.4 0 0 1-.9-3.9 8.4 8.4 0 0 1 9-8.4 8.4 8.4 0 0 1 8.8 8.4Z" />
             </svg>
-            Mensaje
+            {t.message}
           </button>
         </div>
       </div>
 
       <div className="glass flex items-center gap-3 p-4">
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-accent">Total estimado</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-accent">{t.estimatedTotal}</p>
           <p className="font-display text-2xl font-bold tabular-nums">{mxn(fare)}</p>
-          <p className="text-xs text-muted">{tier.name} · Efectivo o tarjeta</p>
+          <p className="text-xs text-muted">{fmt(t.payment, { tier: tier.name })}</p>
         </div>
         <button
           type="button"
           onClick={onCancel}
           className="shrink-0 border-2 border-ink-line px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-muted transition hover:border-taxi hover:text-accent"
         >
-          Cancelar
+          {t.cancel}
         </button>
       </div>
 
       <p className="px-2 text-center text-[11px] leading-relaxed text-muted">
-        Comparte tu viaje en tiempo real desde el menú. Todos los conductores
-        están verificados con la SEMOVI.
+        {t.safetyNote}
       </p>
     </div>
   );
