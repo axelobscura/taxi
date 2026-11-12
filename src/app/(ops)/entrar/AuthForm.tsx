@@ -6,14 +6,14 @@ import { login, register, type AuthState } from "./actions";
 
 const EMPTY: AuthState = {};
 
-export default function AuthForm() {
+export default function AuthForm({ firstAccount = false }: { firstAccount?: boolean }) {
   const [mode, setMode] = useState<"login" | "register">("login");
   return mode === "login" ? (
-    <Shell mode={mode} onSwitch={() => setMode("register")}>
+    <Shell mode={mode} firstAccount={firstAccount} onSwitch={() => setMode("register")}>
       <Fields mode="login" />
     </Shell>
   ) : (
-    <Shell mode={mode} onSwitch={() => setMode("login")}>
+    <Shell mode={mode} firstAccount={firstAccount} onSwitch={() => setMode("login")}>
       <Fields mode="register" />
     </Shell>
   );
@@ -22,10 +22,12 @@ export default function AuthForm() {
 /** Chrome around the form: logo, headings and the mode switch. */
 function Shell({
   mode,
+  firstAccount,
   onSwitch,
   children,
 }: {
   mode: "login" | "register";
+  firstAccount: boolean;
   onSwitch: () => void;
   children: React.ReactNode;
 }) {
@@ -37,11 +39,16 @@ function Shell({
         </div>
 
         <p className="eyebrow mb-3">
-          {mode === "login" ? "Acceso de operadores" : "Nueva cuenta"}
+          {mode === "login" ? "Acceso del panel" : "Nueva cuenta"}
         </p>
         <h1 className="mb-6 font-display text-3xl font-extrabold uppercase leading-none">
           {mode === "login" ? "Entrar" : "Registrarse"}
         </h1>
+        {mode === "register" && firstAccount && (
+          <p className="-mt-3 mb-6 text-sm text-muted">
+            Esta primera cuenta será administrador y podrá gestionar usuarios y la flota.
+          </p>
+        )}
 
         {children}
 

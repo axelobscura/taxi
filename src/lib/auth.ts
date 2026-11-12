@@ -1,17 +1,38 @@
 import { randomBytes, randomUUID, scryptSync, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
+import { cache } from "react";
 import { execute, queryOne } from "@/lib/db";
 import "server-only";
 
 const SESSION_COOKIE = "taximex_session";
 const SESSION_DAYS = 30;
 
+/** Operators run the fleet. Admins also manage who can sign in. */
+export type Role = "operator" | "admin";
+
 export type User = {
   id: string;
   email: string;
   name: string;
-  role: string;
+  role: Role;
 };
+
+/** Unknown values fail closed: they can run the fleet, not administer accounts. */
+export function asRole(value: string): Role {
+  return value === "admin" ? "admin" : "operator";
+}
+
+/**
+ * Comma-separated emails in `ADMIN_EMAILS`. Those accounts are promoted to
+ * admin when they sign in, which also recovers access if every admin is lost.
+ */
+export function isListedAdmin(email: string): boolean {
+  const listed = (process.env.ADMIN_EMAILS ?? "")
+    .split(",")
+    .map((item) => item.trim().toLowerCase())
+    .filter((item) => item.includes("@"));
+  return listed.includes(email.toLowerCase().trim());
+}
 
 /** scrypt with a per-password random salt, stored as `salt:hash`. */
 export function hashPassword(password: string): string {
@@ -29,17 +50,37 @@ export function verifyPassword(password: string, stored: string): boolean {
   return expected.length === actual.length && timingSafeEqual(expected, actual);
 }
 
+export async function userCount(): Promise<number> {
+  const row = await queryOne<{ n: number }>(`SELECT COUNT(*) AS n FROM users`);
+  return Number(row?.n ?? 0);
+}
+
 export async function createUser(
   email: string,
   name: string,
   password: string,
 ): Promise<User> {
   const id = randomUUID();
+  const normalizedEmail = email.toLowerCase().trim();
+  const normalizedName = name.trim();
+  // The first account has to be able to grant access to everyone else.
+  const role: Role =
+    (await userCount()) === 0 || isListedAdmin(normalizedEmail) ? "admin" : "operator";
   await execute(
-    `INSERT INTO users (id, email, name, password_hash) VALUES (?, ?, ?, ?)`,
-    [id, email.toLowerCase().trim(), name.trim(), hashPassword(password)],
+    `INSERT INTO users (id, email, name, password_hash, role) VALUES (?, ?, ?, ?, ?)`,
+    [id, normalizedEmail, normalizedName, hashPassword(password), role],
   );
-  return { id, email: email.toLowerCase().trim(), name: name.trim(), role: "operator" };
+  return { id, email: normalizedEmail, name: normalizedName, role };
+}
+
+/** Promotes an env-listed address at sign-in. Never demotes. */
+export async function promoteListedAdmin(user: {
+  id: string;
+  email: string;
+  role: string;
+}): Promise<void> {
+  if (asRole(user.role) === "admin" || !isListedAdmin(user.email)) return;
+  await execute(`UPDATE users SET role = 'admin' WHERE id = ?`, [user.id]);
 }
 
 export function findUserByEmail(email: string) {
@@ -82,7 +123,7 @@ export async function endSession() {
 }
 
 /** The signed-in user, or null. Expired sessions are cleaned up on read. */
-export async function currentUser(): Promise<User | null> {
+export const currentUser = cache(async (): Promise<User | null> => {
   const jar = await cookies();
   const id = jar.get(SESSION_COOKIE)?.value;
   if (!id) return null;
@@ -104,5 +145,5 @@ export async function currentUser(): Promise<User | null> {
     return null;
   }
 
-  return { id: row.id, email: row.email, name: row.name, role: row.role };
-}
+  return { id: row.id, email: row.email, name: row.name, role: asRole(row.role) };
+});

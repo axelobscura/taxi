@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { currentUser } from "@/lib/auth";
+import { currentUser, userCount } from "@/lib/auth";
 import AuthForm from "./AuthForm";
 
 export const metadata = {
@@ -9,5 +9,6 @@ export const metadata = {
 
 export default async function EntrarPage() {
   if (await currentUser()) redirect("/flota");
-  return <AuthForm />;
+  const firstAccount = (await userCount()) === 0;
+  return <AuthForm firstAccount={firstAccount} />;
 }

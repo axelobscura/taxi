@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS users (
   email         VARCHAR(255) NOT NULL UNIQUE,
   name          VARCHAR(80)  NOT NULL,
   password_hash VARCHAR(255) NOT NULL,
+  -- `operator` manages the fleet. `admin` also manages accounts.
   role          VARCHAR(20)  NOT NULL DEFAULT 'operator',
   created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci

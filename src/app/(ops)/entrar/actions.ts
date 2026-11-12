@@ -6,6 +6,7 @@ import {
   createUser,
   endSession,
   findUserByEmail,
+  promoteListedAdmin,
   startSession,
   verifyPassword,
 } from "@/lib/auth";
@@ -39,6 +40,7 @@ export async function login(
     return { error: "Correo o contraseña incorrectos" };
   }
 
+  await promoteListedAdmin(user);
   await startSession(user.id);
   redirect("/flota");
 }

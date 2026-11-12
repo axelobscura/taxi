@@ -1,8 +1,7 @@
-import Logo from "@/components/Logo";
 import { redirect } from "next/navigation";
+import OpsHeader from "@/components/OpsHeader";
 import { currentUser } from "@/lib/auth";
 import { listDrivers } from "@/lib/drivers";
-import { logout } from "@/app/(ops)/entrar/actions";
 import AddDriverForm from "./AddDriverForm";
 import DriverList from "./DriverList";
 
@@ -21,24 +20,7 @@ export default async function FlotaPage() {
 
   return (
     <main className="min-h-dvh">
-      <header className="border-b border-snow/10 bg-coal">
-        <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-4 py-4">
-          <Logo sub="Flota" />
-          <div className="flex items-center gap-3">
-            <span className="hidden text-xs font-bold uppercase tracking-widest text-snow/80 sm:block">
-              {user.name}
-            </span>
-            <form action={logout}>
-              <button
-                type="submit"
-                className="rounded-full border border-snow/30 px-4 py-1.5 text-[11px] font-bold uppercase tracking-widest text-snow transition hover:border-taxi hover:text-taxi"
-              >
-                Salir
-              </button>
-            </form>
-          </div>
-        </div>
-      </header>
+      <OpsHeader user={user} current="flota" />
 
       <div className="mx-auto w-full max-w-5xl px-4 py-8">
         <p className="eyebrow mb-3">Panel de operación</p>

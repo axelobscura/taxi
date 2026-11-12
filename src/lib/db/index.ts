@@ -3,6 +3,15 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import "server-only";
 
+/** Bump when schema.sql or the bootstrap below changes, so a warm dev process reapplies it. */
+const SCHEMA_VERSION = 2;
+
+declare global {
+  var __taxiPool: mysql.Pool | undefined;
+  var __taxiSchema: Promise<void> | undefined;
+  var __taxiSchemaVersion: number | undefined;
+}
+
 /**
  * MySQL / MariaDB connection pool, configured from DB_* env vars.
  *
@@ -11,11 +20,6 @@ import "server-only";
  * created on first use, not on import, so `next build` does not need the
  * database.
  */
-declare global {
-  var __taxiPool: mysql.Pool | undefined;
-  var __taxiSchema: Promise<void> | undefined;
-}
-
 function createPool(): mysql.Pool {
   const { DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME } = process.env;
   if (!DB_HOST || !DB_USER || !DB_NAME) {
@@ -55,9 +59,17 @@ function getPool(): mysql.Pool {
   return globalThis.__taxiPool;
 }
 
-/** Creates any missing tables, once per process. */
+/**
+ * Creates any missing tables, then makes sure an admin exists.
+ * Cached per process; a new SCHEMA_VERSION runs it again after hot reload.
+ */
 function ensureSchema(): Promise<void> {
-  globalThis.__taxiSchema ??= (async () => {
+  if (globalThis.__taxiSchema && globalThis.__taxiSchemaVersion === SCHEMA_VERSION) {
+    return globalThis.__taxiSchema;
+  }
+
+  globalThis.__taxiSchemaVersion = SCHEMA_VERSION;
+  globalThis.__taxiSchema = (async () => {
     const schema = readFileSync(
       join(process.cwd(), "src", "lib", "db", "schema.sql"),
       "utf8",
@@ -66,13 +78,29 @@ function ensureSchema(): Promise<void> {
       .split(/^\s*;\s*$/m)
       .map((s) => s.replace(/^\s*--.*$/gm, "").trim())
       .filter(Boolean);
-    for (const sql of statements) await getPool().query(sql);
+    const pool = getPool();
+    for (const sql of statements) await pool.query(sql);
+    await ensureAdminExists(pool);
   })().catch((err) => {
     // Let the next request retry instead of caching the failure.
     globalThis.__taxiSchema = undefined;
+    globalThis.__taxiSchemaVersion = undefined;
     throw err;
   });
   return globalThis.__taxiSchema;
+}
+
+/**
+ * Accounts created before roles were enforced are all operators. If none is an
+ * admin, the earliest account becomes one so the panel can still be administered.
+ */
+async function ensureAdminExists(pool: mysql.Pool): Promise<void> {
+  const [rows] = await pool.query("SELECT COUNT(*) AS n FROM users WHERE role = 'admin'");
+  const count = Number((rows as { n: number }[])[0]?.n ?? 0);
+  if (count > 0) return;
+  await pool.query(
+    "UPDATE users SET role = 'admin' ORDER BY created_at ASC, id ASC LIMIT 1",
+  );
 }
 
 type Param = string | number | null | Date;
