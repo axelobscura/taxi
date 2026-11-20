@@ -183,7 +183,7 @@ todavía**: el mensaje se escribe en la consola del servidor
 
 | Ruta | Qué hace |
 |---|---|
-| `/entrar` | Alta y acceso al panel |
+| `/entrar` | Acceso al panel (y alta de la primera cuenta) |
 | `/flota` | Panel de flota (requiere sesión) |
 | `/flota/usuarios` | Cuentas del panel (solo administradores) |
 | `GET /api/drivers` | Lista de conductores (pública) |
@@ -231,12 +231,16 @@ Hay dos roles: `operator` gestiona la flota y `admin` además gestiona las
 cuentas del panel en `/flota/usuarios`. Las reglas viven en `src/lib/auth.ts`
 y `src/lib/users.ts`:
 
-- La **primera cuenta** que se registra es administrador; las siguientes que
-  se registran desde `/entrar` son operadores. Un administrador puede crear
-  cuentas con cualquier rol y cambiar o quitar roles.
+- **El registro está cerrado.** `/entrar` solo ofrece crear cuenta mientras
+  la base no tiene ninguna: esa primera cuenta es administrador. A partir de
+  ahí, solo un administrador crea cuentas (con cualquier rol) desde
+  `/flota/usuarios`, y puede cambiar o quitar roles. La comprobación de "base
+  vacía" va dentro del mismo `INSERT`, así que dos registros simultáneos no
+  pueden crear dos primeras cuentas.
 - `ADMIN_EMAILS` (opcional, correos separados por comas): esas cuentas se
-  vuelven administrador al registrarse o al entrar. Nunca se degradan. Sirve
-  para recuperar el acceso si se pierden todos los administradores.
+  vuelven administrador al entrar o cuando un administrador las crea. Nunca se
+  degradan. Sirve para recuperar el acceso si se pierden todos los
+  administradores.
 - Siempre queda **al menos un administrador**: no se puede degradar ni
   eliminar al último, y nadie puede eliminar su propia cuenta. Si una base
   vieja no tiene ninguno, al arrancar se promueve la cuenta más antigua.
@@ -278,8 +282,5 @@ calles (OSRM o similar) con tráfico en vivo, pagos, seguimiento por websocket.
 
 Sobre la flota, falta: verificación de documentos (licencia, tarjetón
 SEMOVI), límite de intentos de acceso, edición de conductores y bitácora de
-cambios. El registro en `/entrar` sigue abierto: cualquiera puede crear una
-cuenta de operador y gestionar conductores, así que en producción habría que
-cerrarlo y dejar el alta de cuentas solo a los administradores. El estado del conductor
-se cambia a mano; en producción lo movería el sistema al aceptar o terminar
-un viaje.
+cambios. El estado del conductor se cambia a mano; en producción lo movería
+el sistema al aceptar o terminar un viaje.

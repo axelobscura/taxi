@@ -117,8 +117,9 @@ export async function queryOne<T>(sql: string, params: Param[] = []): Promise<T 
   return (await query<T>(sql, params))[0];
 }
 
-/** Runs an INSERT / UPDATE / DELETE. */
-export async function execute(sql: string, params: Param[] = []): Promise<void> {
+/** Runs an INSERT / UPDATE / DELETE and returns the number of affected rows. */
+export async function execute(sql: string, params: Param[] = []): Promise<number> {
   await ensureSchema();
-  await getPool().execute(sql, params);
+  const [result] = await getPool().execute<mysql.ResultSetHeader>(sql, params);
+  return result.affectedRows;
 }

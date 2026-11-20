@@ -6,8 +6,14 @@ import { login, register, type AuthState } from "./actions";
 
 const EMPTY: AuthState = {};
 
+/**
+ * Sign-up is only offered while the panel has no accounts, to create the first
+ * admin. After that, accounts are created by admins from /flota/usuarios.
+ */
 export default function AuthForm({ firstAccount = false }: { firstAccount?: boolean }) {
-  const [mode, setMode] = useState<"login" | "register">("login");
+  const [mode, setMode] = useState<"login" | "register">(
+    firstAccount ? "register" : "login",
+  );
   return mode === "login" ? (
     <Shell mode={mode} firstAccount={firstAccount} onSwitch={() => setMode("register")}>
       <Fields mode="login" />
@@ -52,15 +58,21 @@ function Shell({
 
         {children}
 
-        <button
-          type="button"
-          onClick={onSwitch}
-          className="mt-5 w-full text-center text-sm text-muted transition hover:text-cream"
-        >
-          {mode === "login"
-            ? "¿No tienes cuenta? Regístrate"
-            : "¿Ya tienes cuenta? Entra"}
-        </button>
+        {firstAccount ? (
+          <button
+            type="button"
+            onClick={onSwitch}
+            className="mt-5 w-full text-center text-sm text-muted transition hover:text-cream"
+          >
+            {mode === "login"
+              ? "¿No tienes cuenta? Regístrate"
+              : "¿Ya tienes cuenta? Entra"}
+          </button>
+        ) : (
+          <p className="mt-5 text-center text-sm text-muted">
+            ¿No tienes cuenta? Pide a un administrador que te la cree.
+          </p>
+        )}
       </div>
     </main>
   );

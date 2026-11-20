@@ -55,22 +55,30 @@ export async function userCount(): Promise<number> {
   return Number(row?.n ?? 0);
 }
 
-export async function createUser(
+/**
+ * Self-registration is closed: it only creates the very first account, which
+ * becomes the admin who then creates everyone else from /flota/usuarios.
+ * Returns null once any account exists.
+ *
+ * The emptiness check is part of the INSERT itself, so two simultaneous
+ * sign-ups on an empty database cannot both get in.
+ */
+export async function createFirstAdmin(
   email: string,
   name: string,
   password: string,
-): Promise<User> {
+): Promise<User | null> {
   const id = randomUUID();
   const normalizedEmail = email.toLowerCase().trim();
   const normalizedName = name.trim();
-  // The first account has to be able to grant access to everyone else.
-  const role: Role =
-    (await userCount()) === 0 || isListedAdmin(normalizedEmail) ? "admin" : "operator";
-  await execute(
-    `INSERT INTO users (id, email, name, password_hash, role) VALUES (?, ?, ?, ?, ?)`,
-    [id, normalizedEmail, normalizedName, hashPassword(password), role],
+  const inserted = await execute(
+    `INSERT INTO users (id, email, name, password_hash, role)
+     SELECT ?, ?, ?, ?, 'admin' FROM DUAL
+     WHERE NOT EXISTS (SELECT 1 FROM users)`,
+    [id, normalizedEmail, normalizedName, hashPassword(password)],
   );
-  return { id, email: normalizedEmail, name: normalizedName, role };
+  if (inserted === 0) return null;
+  return { id, email: normalizedEmail, name: normalizedName, role: "admin" };
 }
 
 /** Promotes an env-listed address at sign-in. Never demotes. */

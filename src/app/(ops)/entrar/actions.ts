@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import {
-  createUser,
+  createFirstAdmin,
   endSession,
   findUserByEmail,
   promoteListedAdmin,
@@ -12,6 +12,9 @@ import {
 } from "@/lib/auth";
 
 export type AuthState = { error?: string };
+
+/** Shown when someone tries to sign up after the first account exists. */
+const CLOSED = "El registro está cerrado. Pide a un administrador que te cree una cuenta.";
 
 const Credentials = z.object({
   email: z.string().trim().email("Correo inválido"),
@@ -58,11 +61,12 @@ export async function register(
     return { error: parsed.error.issues[0].message };
   }
 
-  if (await findUserByEmail(parsed.data.email)) {
-    return { error: "Ya existe una cuenta con ese correo" };
-  }
-
-  const user = await createUser(parsed.data.email, parsed.data.name, parsed.data.password);
+  const user = await createFirstAdmin(
+    parsed.data.email,
+    parsed.data.name,
+    parsed.data.password,
+  );
+  if (!user) return { error: CLOSED };
   await startSession(user.id);
   redirect("/flota");
 }
