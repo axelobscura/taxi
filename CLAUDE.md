@@ -20,13 +20,13 @@ There is no test suite.
 
 - `build` deliberately uses `--webpack`: Turbopack's PostCSS worker crashed on the production host. Dev still uses Turbopack. Don't remove the flag.
 - Fonts are self-hosted via `next/font/local` (`src/fonts/`) because `next/font/google` failed on the host. Don't switch back.
-- DB access needs `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` in `.env.local` (remote Hostinger MySQL, IP allowlisted). Optional: `NEXT_PUBLIC_GA_ID`, `GOOGLE_SITE_VERIFICATION`.
+- DB access needs `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` in `.env.local` (remote Hostinger MySQL, IP allowlisted). Optional: `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_GA_ID`, `GOOGLE_SITE_VERIFICATION`, `ADMIN_EMAILS`.
 
 ## Architecture
 
 ### Two root layouts
 - `src/app/[lang]/` — the public, bilingual site (es, en). Its `layout.tsx` is a root layout.
-- `src/app/(ops)/` — the operator panel (`/entrar` login, `/flota` fleet). Spanish only, `noindex`.
+- `src/app/(ops)/` — the operator panel (`/entrar` login, `/flota` fleet, `/flota/usuarios` admin-only accounts). Spanish only, `noindex`. Pages share `OpsHeader`.
 - Both render `<html>/<body>` through `src/components/RootShell.tsx` (fonts, GA, global CSS).
 
 ### i18n routing
@@ -47,8 +47,11 @@ There is no test suite.
 
 ### Backend
 - `src/lib/db/index.ts`: lazy `mysql2` pool cached on `globalThis` (so `next build` never needs the DB and HMR doesn't leak connections). `connectionLimit: 5` because shared hosting caps connections. Sessions forced to UTC and strict SQL mode.
-- `schema.sql` is applied automatically (`CREATE TABLE IF NOT EXISTS`) on first query per process. It's read at runtime via `process.cwd()`, so it's listed in `outputFileTracingIncludes` in `next.config.ts` — keep that if the file moves.
-- Tables: `users`, `sessions`, `drivers`. Auth (`src/lib/auth.ts`) is hand-rolled: scrypt with per-password salt, session row + `httpOnly` cookie (`taximex_session`, 30 days). Driver CRUD + validation (Zod) in `src/lib/drivers.ts`; mutations in `/api/drivers*` and `(ops)/flota/actions.ts` require a session.
+- `schema.sql` is applied automatically (`CREATE TABLE IF NOT EXISTS`) on first query per process, followed by a bootstrap that promotes the oldest user if no admin exists. Bump `SCHEMA_VERSION` in `src/lib/db/index.ts` whenever `schema.sql` or that bootstrap changes, so a warm dev process reapplies it. The file is read at runtime via `process.cwd()`, so it's listed in `outputFileTracingIncludes` in `next.config.ts` — keep that if the file moves.
+- Tables: `users`, `sessions`, `drivers`. Auth (`src/lib/auth.ts`) is hand-rolled: scrypt with per-password salt, session row + `httpOnly` cookie (`taximex_session`, 30 days). `currentUser()` is wrapped in React `cache()`, so call it freely within a request. Driver CRUD + validation (Zod) in `src/lib/drivers.ts`; mutations in `/api/drivers*` and `(ops)/flota/actions.ts` require a session.
+- Roles are `operator` (fleet) and `admin` (fleet plus accounts). Unknown values in the DB are treated as `operator` (`asRole`). The first registered account becomes admin; emails in the `ADMIN_EMAILS` env var (comma-separated) are promoted on register/login and never demoted.
+- Account management lives in `src/lib/users.ts`. Every function there calls `assertAdmin()` itself and throws `UserAdminError` carrying an HTTP status. Both `/api/users*` and the server actions in `(ops)/flota/usuarios/actions.ts` map that error to a response, so keep the admin check in the lib rather than in callers. Invariants enforced there: at least one admin always remains, and nobody can delete their own account.
+- `/entrar` registration is still open: anyone can create an operator account.
 - The contact form (`app/[lang]/contacto/actions.ts`) validates with Zod but only logs to the server console; no email provider is wired up.
 
 ### Styling

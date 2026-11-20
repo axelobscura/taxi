@@ -13,8 +13,8 @@ npm run dev                  # http://localhost:3000
 Crea `.env.local` con las variables `DB_HOST`, `DB_PORT`, `DB_USER`,
 `DB_PASSWORD` y `DB_NAME` (ver *Base de datos*). Las tablas se crean solas en
 la primera consulta. Opcionales: `NEXT_PUBLIC_SITE_URL` (por defecto
-`https://taxi.org.mx`), `NEXT_PUBLIC_GA_ID` (Google Analytics 4) y
-`GOOGLE_SITE_VERIFICATION` (Search Console).
+`https://taxi.org.mx`), `NEXT_PUBLIC_GA_ID` (Google Analytics 4),
+`GOOGLE_SITE_VERIFICATION` (Search Console) y `ADMIN_EMAILS` (ver *Roles*).
 
 `npm run build` para producción, `npm run lint` para revisar el código. No hay
 pruebas automatizadas.
@@ -41,8 +41,8 @@ src/
   proxy.ts          Reescritura de URLs por idioma (ver *Idiomas*)
   app/
     [lang]/         Sitio público (es, en): layout raíz, portada y páginas
-    (ops)/          Panel de flota (/entrar, /flota): layout raíz propio, solo español
-    api/            Conductores y asignación de viajes
+    (ops)/          Panel (/entrar, /flota, /flota/usuarios): layout raíz propio, solo español
+    api/            Conductores, cuentas y asignación de viajes
     globals.css     Tokens de color, animaciones, utilidades
     sitemap.ts, robots.ts, opengraph-image.tsx
   components/
@@ -55,7 +55,8 @@ src/
     cities.ts       Ciudades y zonas de las páginas /taxi (inglés en cities.en.ts)
     site.ts         Marca, URL pública y metadata por página
     db/             Conexión MySQL y schema.sql
-    auth.ts         Cuentas y sesiones de operadores
+    auth.ts         Contraseñas, sesiones y roles
+    users.ts        Gestión de cuentas (solo administradores)
     drivers.ts      Alta, estado y asignación de conductores
   fonts/            Montserrat y Outfit, servidas localmente
 ```
@@ -182,12 +183,17 @@ todavía**: el mensaje se escribe en la consola del servidor
 
 | Ruta | Qué hace |
 |---|---|
-| `/entrar` | Alta y acceso de operadores |
+| `/entrar` | Alta y acceso al panel |
 | `/flota` | Panel de flota (requiere sesión) |
+| `/flota/usuarios` | Cuentas del panel (solo administradores) |
 | `GET /api/drivers` | Lista de conductores (pública) |
 | `POST /api/drivers` | Alta de conductor (requiere sesión) |
 | `PATCH /api/drivers/:id` | Cambia estado (requiere sesión) |
 | `DELETE /api/drivers/:id` | Elimina conductor (requiere sesión) |
+| `GET /api/users` | Lista de cuentas (solo administradores) |
+| `POST /api/users` | Crea una cuenta con su rol (solo administradores) |
+| `PATCH /api/users/:id` | Cambia el rol de una cuenta (solo administradores) |
+| `DELETE /api/users/:id` | Elimina una cuenta (solo administradores) |
 | `POST /api/assign` | Asigna conductor disponible al reservar |
 
 ### Base de datos
@@ -199,6 +205,10 @@ contraseña lleva `#`, ponla entre comillas simples.
 El esquema está en `src/lib/db/schema.sql` y se aplica solo (con
 `CREATE TABLE IF NOT EXISTS`) en la primera consulta de cada proceso. Todas las
 fechas se guardan en UTC.
+
+Si cambias `schema.sql` o el arranque de la base en `src/lib/db/index.ts`,
+sube `SCHEMA_VERSION` en ese archivo: así un servidor de desarrollo que ya
+estaba corriendo lo vuelve a aplicar tras la recarga en caliente.
 
 Hostinger solo acepta conexiones desde IPs permitidas en hPanel →
 *Bases de datos* → *MySQL remoto*. Para Vercel, cuyas IPs cambian, hay que
@@ -214,6 +224,23 @@ sesiones en cookie `httpOnly` + `sameSite=lax`, válidas 30 días.
 
 El login responde el mismo mensaje con correo inexistente o contraseña
 incorrecta, para no revelar qué correos están registrados.
+
+### Roles
+
+Hay dos roles: `operator` gestiona la flota y `admin` además gestiona las
+cuentas del panel en `/flota/usuarios`. Las reglas viven en `src/lib/auth.ts`
+y `src/lib/users.ts`:
+
+- La **primera cuenta** que se registra es administrador; las siguientes que
+  se registran desde `/entrar` son operadores. Un administrador puede crear
+  cuentas con cualquier rol y cambiar o quitar roles.
+- `ADMIN_EMAILS` (opcional, correos separados por comas): esas cuentas se
+  vuelven administrador al registrarse o al entrar. Nunca se degradan. Sirve
+  para recuperar el acceso si se pierden todos los administradores.
+- Siempre queda **al menos un administrador**: no se puede degradar ni
+  eliminar al último, y nadie puede eliminar su propia cuenta. Si una base
+  vieja no tiene ninguno, al arrancar se promueve la cuenta más antigua.
+- Un valor de rol desconocido en la base se trata como `operator`.
 
 ### Cómo se conecta con la reserva
 
@@ -250,7 +277,9 @@ faltaría: geolocalización y autocompletado de direcciones, ruteo real por
 calles (OSRM o similar) con tráfico en vivo, pagos, seguimiento por websocket.
 
 Sobre la flota, falta: verificación de documentos (licencia, tarjetón
-SEMOVI), roles de administrador frente a operador, límite de intentos de
-acceso, edición de conductores y bitácora de cambios. El estado del conductor
+SEMOVI), límite de intentos de acceso, edición de conductores y bitácora de
+cambios. El registro en `/entrar` sigue abierto: cualquiera puede crear una
+cuenta de operador y gestionar conductores, así que en producción habría que
+cerrarlo y dejar el alta de cuentas solo a los administradores. El estado del conductor
 se cambia a mano; en producción lo movería el sistema al aceptar o terminar
 un viaje.
