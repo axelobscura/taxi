@@ -1,25 +1,32 @@
-# TAXI_MEX · Taxis CDMX
+# TAXI-MEX · Taxis CDMX
 
-App de reserva de taxis para la Ciudad de México. Next.js 16 (App Router),
-React 19, TypeScript y Tailwind v4.
+App de reserva de taxis para la Ciudad de México, en español e inglés.
+Next.js 16 (App Router), React 19, TypeScript, Tailwind v4 y MySQL.
 
 ## Arrancar
 
 ```bash
 npm install
-cp .env.example .env.local   # opcional; hay valores por defecto
 npm run dev                  # http://localhost:3000
 ```
 
-Necesita las variables `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD` y
-`DB_NAME` en `.env.local` (ver *Base de datos*). Las tablas se crean solas en
-la primera consulta.
+Crea `.env.local` con las variables `DB_HOST`, `DB_PORT`, `DB_USER`,
+`DB_PASSWORD` y `DB_NAME` (ver *Base de datos*). Las tablas se crean solas en
+la primera consulta. Opcionales: `NEXT_PUBLIC_SITE_URL` (por defecto
+`https://taxi.org.mx`), `NEXT_PUBLIC_GA_ID` (Google Analytics 4) y
+`GOOGLE_SITE_VERIFICATION` (Search Console).
 
-`npm run build` para producción, `npm run lint` para revisar el código.
+`npm run build` para producción, `npm run lint` para revisar el código. No hay
+pruebas automatizadas.
+
+> `build` usa `next build --webpack` a propósito: en el hosting, Turbopack
+> fallaba al levantar su proceso de PostCSS. En desarrollo se sigue usando
+> Turbopack.
 
 ## Cómo funciona
 
-El flujo vive en `src/app/page.tsx` y avanza por tres etapas:
+La reserva vive en `src/app/[lang]/RideBooker.tsx` (montada desde la portada,
+`src/app/[lang]/page.tsx`) y avanza por tres etapas:
 
 | Etapa | Qué ve el usuario |
 |---|---|
@@ -31,33 +38,58 @@ El flujo vive en `src/app/page.tsx` y avanza por tres etapas:
 
 ```
 src/
+  proxy.ts          Reescritura de URLs por idioma (ver *Idiomas*)
   app/
-    layout.tsx      Fuentes (Sora/Outfit), metadata, tema
+    [lang]/         Sitio público (es, en): layout raíz, portada y páginas
+    (ops)/          Panel de flota (/entrar, /flota): layout raíz propio, solo español
+    api/            Conductores y asignación de viajes
     globals.css     Tokens de color, animaciones, utilidades
-    page.tsx        Máquina de estados del flujo
+    sitemap.ts, robots.ts, opengraph-image.tsx
   components/
-    CityMap.tsx     Mapa SVG estilizado, encuadre automático
-    PlacePicker.tsx Buscador de origen y destino
-    TierSelect.tsx  Categorías de viaje
-    DriverCard.tsx  Conductor asignado
+    RootShell.tsx   <html>/<body>, fuentes y GA compartidos por los dos layouts raíz
+    CityMap.tsx     Mapa Leaflet con ruta y encuadre automático
+    Landing.tsx     Piezas y JSON-LD de las páginas de cobertura
+  i18n/             Idiomas, diccionarios y helpers de servidor/cliente
   lib/
-    data.ts         Lugares, categorías, conductores y tarifas
+    data.ts         Lugares, categorías y tarifas
+    cities.ts       Ciudades y zonas de las páginas /taxi (inglés en cities.en.ts)
+    site.ts         Marca, URL pública y metadata por página
+    db/             Conexión MySQL y schema.sql
+    auth.ts         Cuentas y sesiones de operadores
+    drivers.ts      Alta, estado y asignación de conductores
+  fonts/            Montserrat y Outfit, servidas localmente
 ```
+
+## Idiomas
+
+El español es el idioma por defecto y va **sin prefijo** (`/tarifas`); el
+inglés vive bajo `/en` (`/en/tarifas`). Ambos se renderizan desde
+`app/[lang]`: `src/proxy.ts` reescribe por dentro las rutas sin prefijo a
+`/es/...` y redirige (308) cualquier `/es/...` visible a su forma sin prefijo,
+para no duplicar páginas en buscadores.
+
+- Los enlaces internos se arman con `localePath(lang, ruta)` de
+  `src/i18n/config.ts`.
+- Los Server Components leen el idioma con `getLang()` / `getI18n()`
+  (`src/i18n/server.ts`); los Client Components, con `useI18n()`.
+- Los textos compartidos están en `src/i18n/dictionaries.ts`; los propios de
+  cada página, junto a ella (p. ej. `app/[lang]/taxi/copy.ts`).
+- El panel de flota no se traduce y queda fuera del proxy, igual que `/api`.
+  Si agregas una ruta fuera de `[lang]`, exclúyela en el `matcher` del proxy.
 
 ## Lenguaje visual
 
-El diseño toma la estructura de formas de la plantilla **Taxiar**: esquinas a
-90° sin redondeo, figuras en diagonal (barra de marca, botones, control de
-intercambio), tipografía pesada en mayúsculas y la etiqueta de doble guion
-sobre cada encabezado. La paleta se mantiene en rosa CDMX sobre fondo oscuro
-en lugar del amarillo sobre blanco del original.
+Amarillo taxi sobre negro noche, con secciones claras (`.theme-light`) para
+páginas de contenido, tarifas y el panel de reserva. Los colores son tokens en
+el bloque `@theme` de `globals.css`; `.theme-light` reasigna esas mismas
+variables, así que `bg-ink-*`, `text-cream` y `text-muted` cambian solos dentro
+de esa sección. `--color-accent` pasa a ámbar oscuro porque el texto amarillo
+no se lee sobre blanco.
 
-Las utilidades viven en `globals.css`: `.skewed`, `.skewed-btn`, `.cut-tr` y
+Tipografía: Montserrat para títulos y Outfit para texto. Se sirven desde
+`src/fonts/` con `next/font/local` porque `next/font/google` rompía el build
+en el hosting. La etiqueta pequeña en mayúsculas sobre los encabezados es
 `.eyebrow`.
-
-> Nota: `.skewed` usa `transform`, así que no se puede combinar en el mismo
-> elemento con utilidades de Tailwind que también lo usen (`-translate-y-1/2`,
-> `scale-*`). En esos casos se usa `clip-path` directamente.
 
 ## El mapa
 
@@ -83,15 +115,14 @@ Se probaron cuatro y solo uno sirve sin llave:
 > que mirar la imagen.
 
 Los tiles se oscurecen con un filtro CSS sobre `.leaflet-tile-pane` para que
-la ruta rosa siga siendo lo más brillante en pantalla. El filtro se aplica
+la ruta amarilla siga siendo lo más brillante en pantalla. El filtro se aplica
 solo a los tiles, así que los marcadores conservan su color real.
 
 ### Ruta y encuadre
 
 La ruta es una curva de Bézier cuadrática entre origen y destino (`arc()`),
-no una ruta por calles reales. `fitBounds` usa padding asimétrico
-(`paddingBottomRight`) para dejar el trazo en la banda visible sobre el panel
-de reserva.
+no una ruta por calles reales. El mapa se encuadra con `fitBounds` para que
+origen, destino y trazo queden a la vista.
 
 ## Tarifas
 
@@ -105,24 +136,35 @@ estimación honesta, no una ruta calculada.
 
 ## Páginas públicas
 
+Todas existen también en inglés bajo `/en`.
+
 | Ruta | Contenido |
 |---|---|
 | `/` | App de reserva con mapa |
 | `/servicios` | Las cuatro categorías explicadas, con tarifa de ejemplo |
 | `/tarifas` | Cómo se calcula el precio, comparativa y rutas de ejemplo |
+| `/taxi` | Cobertura: índice de ciudades y zonas |
+| `/taxi/[ciudad]` y `/taxi/[ciudad]/[zona]` | Páginas de cobertura para buscadores, con tarifas de ejemplo y preguntas frecuentes |
 | `/nosotros` | Quiénes somos, seguridad y cobertura |
 | `/contacto` | Formulario, canales de atención y cobertura |
+
+Las páginas de ciudad y zona se generan en el build a partir de
+`src/lib/cities.ts` (`dynamicParams = false`: una ciudad o zona que no esté
+ahí da 404). Cada página arma su metadata con `pageMetadata()` de
+`src/lib/site.ts`, que agrega la URL canónica y las alternativas `hreflang`.
 
 Se navega desde el menú de pantalla completa (el botón ☰ del encabezado),
 que además incluye `/entrar` — el acceso al panel de flota — separado por una
 línea y con menor jerarquía, porque no es una página pública sino la entrada
 para operadores.
 
-Las rutas viven en `src/lib/nav.ts`. `NAV` alimenta el menú; `FOOTER_NAV`
-alimenta el pie de página y excluye `/entrar`.
+Las rutas viven en `src/lib/nav.ts`: `NAV` alimenta el menú y el pie de
+página, y `LOGIN_PATH` es `/entrar`. Los nombres de cada ruta salen de la
+sección `nav` del diccionario.
 
-`/servicios` y `/tarifas` calculan sus precios con las mismas funciones que
-usa la reserva (`fareFor`, `distanceKm`), así que nunca se desfasan de la app.
+`/servicios`, `/tarifas` y las páginas de cobertura calculan sus precios con
+las mismas funciones que usa la reserva (`fareFor`, `distanceKm`), así que
+nunca se desfasan de la app.
 
 > El menú se monta con `createPortal` sobre `document.body`. Es necesario: el
 > encabezado crea su propio contexto de apilamiento, y ahí dentro un
@@ -132,7 +174,7 @@ usa la reserva (`fareFor`, `distanceKm`), así que nunca se desfasan de la app.
 
 Valida en el navegador y otra vez en el servidor con Zod. **No envía correos
 todavía**: el mensaje se escribe en la consola del servidor
-(`src/app/contacto/actions.ts`). Falta conectar un proveedor de correo.
+(`src/app/[lang]/contacto/actions.ts`). Falta conectar un proveedor de correo.
 
 ## Flota y backend
 
@@ -188,7 +230,7 @@ Configura las mismas variables `DB_*` en *Project Settings → Environment
 Variables*. Los datos viven en la base remota, así que sobreviven a despliegues
 y arranques en frío.
 
-Dos detalles que hacen falta para que el despliegue funcione:
+Detalles que hacen falta para que el despliegue funcione:
 
 - La conexión es **perezosa**: `next build` evalúa cada módulo de ruta para leer
   su configuración, y conectarse al importar haría que el build dependiera de la
