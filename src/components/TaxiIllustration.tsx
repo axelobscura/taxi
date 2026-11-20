@@ -2,7 +2,8 @@
  * Side view of a yellow taxi for the home hero. Drawn in SVG so it stays
  * sharp at any size; swap for a photo by replacing this component.
  * The car faces right. `taxi-*` classes hook into the hero animation in
- * globals.css (drive-in, wheels rolling while it moves, idle bob).
+ * globals.css (drive-in, wheels rolling while it moves, idle bob, and the
+ * rear door opening once it has parked).
  *
  * Geometry: ground at y=236, wheels r=38 centred on y=198 so they touch
  * the ground, body sill at y=212 with arch cutouts (r=46) around each wheel.
@@ -27,6 +28,14 @@ const BODY = [
 ].join(" ");
 
 const REAR_WINDOW = "M268 82 C276 76 286 74 298 74 L348 74 L348 118 L222 118 Z";
+
+/**
+ * Rear passenger door, window included. It's hinged on its front edge at
+ * x=355 (the B-pillar); the door-open animation scales it toward that line.
+ * The same outline, filled dark, is the doorway behind it.
+ */
+const REAR_DOOR =
+  "M214 122 L218 120 L265 80 C273 73 284 71 297 71 L355 71 L355 210 L214 210 Z";
 const FRONT_WINDOW = "M362 74 L428 74 C442 74 452 78 462 86 L502 118 L362 118 Z";
 
 export default function TaxiIllustration({ className = "" }: { className?: string }) {
@@ -93,6 +102,13 @@ export default function TaxiIllustration({ className = "" }: { className?: strin
         <clipPath id="bodyClip">
           <path d={BODY} />
         </clipPath>
+        <clipPath id="doorClip">
+          <path d={REAR_DOOR} />
+        </clipPath>
+        <radialGradient id="cabinLight" cx="0.5" cy="0.15" r="0.7">
+          <stop offset="0" stopColor="#ffe9a8" stopOpacity="0.5" />
+          <stop offset="1" stopColor="#ffe9a8" stopOpacity="0" />
+        </radialGradient>
         <clipPath id="rearGlassClip">
           <path d={REAR_WINDOW} />
         </clipPath>
@@ -156,24 +172,60 @@ export default function TaxiIllustration({ className = "" }: { className?: strin
           <path d="M51 152 L64 149 L64 156 L51 158 Z" fill="#fff" opacity="0.3" />
         </g>
 
-        {/* Windows with dark frames and a B-pillar */}
-        <path d={REAR_WINDOW} fill="url(#glass)" stroke="#141414" strokeWidth="3" strokeLinejoin="round" />
-        <path d={FRONT_WINDOW} fill="url(#glass)" stroke="#141414" strokeWidth="3" strokeLinejoin="round" />
-        <rect x="348" y="72" width="14" height="48" fill="#141414" />
-        <g clipPath="url(#rearGlassClip)">
-          <path d="M282 70 L310 70 L262 122 L234 122 Z" fill="#fff" opacity="0.14" />
+        {/* Doorway behind the rear door: cabin, back seat and a warm
+            interior light. Hidden while the door is shut. */}
+        <g clipPath="url(#doorClip)">
+          <path d={REAR_DOOR} fill="#111316" />
+          <rect x="214" y="71" width="141" height="139" fill="url(#cabinLight)" />
+          <rect x="252" y="90" width="30" height="16" rx="5" fill="#2b2d33" />
+          <rect x="236" y="104" width="74" height="72" rx="12" fill="#2b2d33" />
+          <rect x="244" y="112" width="6" height="56" rx="3" fill="#35373e" />
+          <rect x="230" y="168" width="112" height="24" rx="7" fill="#383a41" />
+          <rect x="214" y="200" width="141" height="10" fill="#0b0c0e" />
         </g>
+
+        {/* Rear door, window and all; swings open around its hinge (x=355). */}
+        <g className="taxi-door">
+          <path d={REAR_DOOR} fill="url(#body)" />
+          <g clipPath="url(#doorClip)">
+            <rect x="214" y="126" width="141" height="18" fill="#fff" opacity="0.12" />
+            <rect x="214" y="148" width="141" height="2" fill="#111" />
+            <rect x="214" y="150" width="141" height="14" fill="url(#checker)" />
+            <rect x="214" y="164" width="141" height="2" fill="#111" />
+            <rect x="214" y="202" width="141" height="12" fill="#a87300" opacity="0.5" />
+          </g>
+          <path d={REAR_DOOR} fill="none" stroke="#a87500" strokeWidth="2" strokeLinejoin="round" />
+          <path d={REAR_WINDOW} fill="url(#glass)" stroke="#141414" strokeWidth="3" strokeLinejoin="round" />
+          <g clipPath="url(#rearGlassClip)">
+            <path d="M282 70 L310 70 L262 122 L234 122 Z" fill="#fff" opacity="0.14" />
+          </g>
+          <rect x="300" y="132" width="26" height="6" rx="3" fill="#7a5600" />
+          <text
+            x="284"
+            y="190"
+            textAnchor="middle"
+            fontFamily="Arial, sans-serif"
+            fontWeight="700"
+            fontSize="9"
+            letterSpacing="1.5"
+            fill="#111"
+            opacity="0.7"
+          >
+            CDMX · 042
+          </text>
+        </g>
+
+        {/* B-pillar, drawn over the door's hinge edge */}
+        <rect x="348" y="72" width="14" height="48" fill="#141414" />
+
+        {/* Windows with dark frames and a B-pillar */}
+        <path d={FRONT_WINDOW} fill="url(#glass)" stroke="#141414" strokeWidth="3" strokeLinejoin="round" />
         <g clipPath="url(#frontGlassClip)">
           <path d="M424 70 L452 70 L404 122 L376 122 Z" fill="#fff" opacity="0.12" />
         </g>
 
-        {/* Door seams */}
-        <path d="M214 124 L214 208" stroke="#a87500" strokeWidth="2" />
-        <path d="M355 122 L355 210" stroke="#a87500" strokeWidth="2" />
+        {/* Front door seam and handle (the rear door draws its own) */}
         <path d="M470 120 L470 210" stroke="#a87500" strokeWidth="2" />
-
-        {/* Door handles */}
-        <rect x="300" y="132" width="26" height="6" rx="3" fill="#7a5600" />
         <rect x="420" y="132" width="26" height="6" rx="3" fill="#7a5600" />
 
         {/* Side mirror on a short stem at the front of the door window */}
@@ -195,19 +247,6 @@ export default function TaxiIllustration({ className = "" }: { className?: strin
           fill="#111"
         >
           TAXI<tspan fill="#7a5600">-MEX</tspan>
-        </text>
-        <text
-          x="284"
-          y="190"
-          textAnchor="middle"
-          fontFamily="Arial, sans-serif"
-          fontWeight="700"
-          fontSize="9"
-          letterSpacing="1.5"
-          fill="#111"
-          opacity="0.7"
-        >
-          CDMX · 042
         </text>
 
         {/* Bumpers */}
